@@ -1,5 +1,3 @@
-# syntax=docker/dockerfile:1
-
 # -------------------------
 # 构建阶段：装依赖 + 编译 Vite 应用
 # 合并 deps/builder 两步，避免 COPY --from=deps 跨阶段时
@@ -13,8 +11,11 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 
 # --include=dev 防止任何环境下意外跳过 devDependencies（typescript/vite 等在这里）。
-RUN --mount=type=cache,target=/root/.npm \
-    npm ci --include=dev --prefer-offline --no-audit --progress=false
+# 显式 NODE_ENV=development，避免 base image 或 CI 环境带入 production 导致跳过 devDeps。
+ENV NODE_ENV=development
+RUN npm ci --include=dev --no-audit --progress=false \
+    && echo "=== node_modules/.bin/ contents ===" \
+    && ls node_modules/.bin/ | head -30
 
 COPY . .
 
