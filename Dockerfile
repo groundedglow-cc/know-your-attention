@@ -7,15 +7,12 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# 先复制 lockfile，让依赖层在源码改动时仍能命中缓存。
-COPY package.json package-lock.json ./
+# 先复制 lockfile 和 .npmrc，让依赖层在源码改动时仍能命中缓存。
+# .npmrc 指定 registry 镜像和重试策略，避免 npm ci 在 CI 环境因网络问题静默失败。
+COPY package.json package-lock.json .npmrc ./
 
-# --include=dev 防止任何环境下意外跳过 devDependencies（typescript/vite 等在这里）。
-# 显式 NODE_ENV=development，避免 base image 或 CI 环境带入 production 导致跳过 devDeps。
-ENV NODE_ENV=development
-RUN npm ci --include=dev --no-audit --progress=false \
-    && echo "=== node_modules/.bin/ contents ===" \
-    && ls node_modules/.bin/ | head -30
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --prefer-offline --no-audit --progress=false
 
 COPY . .
 
