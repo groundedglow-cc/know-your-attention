@@ -1,0 +1,7 @@
+{
+  "tool_name": "mcp__cmux-agent-mcp__cmux_browser_console",
+  "tool_input_preview": "{\"surface\":\"surface:57\",\"type\":\"errors\",\"action\":\"list\"}",
+  "error": "cmux browser --surface surface:57 errors list failed: Error: js_error: Timed out waiting for JavaScript result",
+  "timestamp": "2026-05-19T06:27:51.017Z",
+  "retry_count": 1
+}

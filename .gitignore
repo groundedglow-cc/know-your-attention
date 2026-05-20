@@ -1,0 +1,19 @@
+node_modules
+dist
+.DS_Store
+*.log
+.vite
+.idea
+.vscode
+.env
+.env.local
+
+# build artifacts
+tsconfig.tsbuildinfo
+
+# editor / agent local state
+.claude/
+.efe/
+
+# EFE plugin: local session state (auto-generated, do not track)
+/.efe/state/sessions/

@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(weread-skills)",
+      "Bash(npx tsc *)",
+      "Bash(git init *)",
+      "Bash(git remote *)",
+      "Bash(git add *)",
+      "Skill(efe:efe-deployer)"
+    ]
+  }
+}
