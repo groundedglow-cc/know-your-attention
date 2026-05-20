@@ -3,7 +3,7 @@
 # -------------------------
 # 依赖阶段：只装 npm 依赖，最大化利用 layer 缓存
 # -------------------------
-FROM node:22-alpine AS deps
+FROM node:20-alpine AS deps
 
 WORKDIR /app
 
@@ -15,7 +15,7 @@ RUN --mount=type=cache,target=/root/.npm \
 # -------------------------
 # 构建阶段：编译 Vite 应用
 # -------------------------
-FROM node:22-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
