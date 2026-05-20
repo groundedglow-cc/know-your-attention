@@ -63,7 +63,7 @@ GitHub 仓库 ───push main───► GitHub Actions
 **踩坑点**：如果一开始就开橙云代理，certbot 申请证书时 HTTP-01 校验可能失败。**先灰云签证书 → 切橙云**。
 **验证**：`dig +short attention.groundedglow.cc` 应返回服务器 IP。
 
-### Step 2 · 本地项目添加 4 个文件
+### Step 2 · 本地项目添加 5 个文件
 
 在项目根目录新增：
 
@@ -71,24 +71,32 @@ GitHub 仓库 ───push main───► GitHub Actions
 
 **先理解一个关键概念：多阶段构建（multi-stage build）**。一个 `Dockerfile` 可以写多个 `FROM`，每一段从一个基础镜像开始，叫做一个 `stage`。最后一个 stage 才是最终镜像；前面 stage 只是用来产出文件，可以从里面 `COPY --from=xxx` 拷东西过来。这样做的好处是：构建过程中要用到的 Node、npm、源码等都不会进最终镜像，最终镜像只剩 nginx + 编译好的静态文件，**体积小、攻击面小**。
 
-下面是完整文件，逐段拆解：
+本项目最终用**两段式**：一个 builder stage（装依赖 + 编译）+ 一个 runner stage（nginx 服务静态文件）。
 
 ```dockerfile
-# syntax=docker/dockerfile:1
-FROM node:20-alpine AS deps
+# -------------------------
+# 构建阶段：装依赖 + 编译 Vite 应用
+# -------------------------
+FROM node:20-alpine AS builder
 WORKDIR /app
-COPY package.json package-lock.json ./
+
+# 先复制 lockfile 和 .npmrc，让依赖层在源码改动时仍能命中缓存。
+# .npmrc 指定 registry 镜像和重试策略，避免 npm ci 在 CI 环境因网络问题静默失败。
+COPY package.json package-lock.json .npmrc ./
+
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --prefer-offline --no-audit --progress=false
 
-FROM node:20-alpine AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+
 ARG VITE_API_BASE_URL=
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+
 RUN npm run build
 
+# -------------------------
+# 运行阶段：纯静态文件，用 nginx 直接服务
+# -------------------------
 FROM nginx:alpine AS runner
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/dist /usr/share/nginx/html
@@ -96,27 +104,18 @@ EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
 ```
 
-**第 1 行：`# syntax=docker/dockerfile:1`**
-告诉 Docker 用最新的 Dockerfile 语法解析器（启用 BuildKit 特性，比如下面的 `--mount=type=cache`）。不写也能跑，但缓存挂载就用不了。
-
-**Stage 1 · `deps`（只装依赖）**
-- `FROM node:20-alpine AS deps`：基于 Node 20 的 alpine 镜像（小，~50MB），给这个 stage 起名 `deps` 方便后面引用
+**Stage 1 · `builder`（装依赖 + 编译）**
+- `FROM node:20-alpine AS builder`：基于 Node 20 的 alpine 镜像（小，~50MB），给这个 stage 起名 `builder`
 - `WORKDIR /app`：之后所有命令的工作目录是 `/app`（相当于 `cd /app`）
-- `COPY package.json package-lock.json ./`：**只**拷 lockfile，不拷源码。这是关键优化——只要这两个文件没变，这一层的缓存就有效，下次构建直接跳过 `npm ci`
-- `RUN --mount=type=cache,target=/root/.npm`：把 npm 的全局缓存目录 `/root/.npm` 挂载成持久缓存，**跨多次 build 复用下载好的包**，避免每次都从 npm 源拉
+- `COPY package.json package-lock.json .npmrc ./`：**只**拷 lockfile 和 npmrc，不拷源码。这是关键优化——只要这三个文件没变，这一层的缓存就有效，下次构建直接跳过 `npm ci`
+- `RUN --mount=type=cache,target=/root/.npm`：把 npm 的全局缓存目录 `/root/.npm` 挂载成持久缓存，**跨多次 build 复用下载好的包**
 - `npm ci`：严格按 lockfile 安装（比 `npm install` 更快更确定）；`--prefer-offline`（优先用缓存）、`--no-audit`（不做安全审计）、`--progress=false`（不打印进度条）都是为了加速 + 静音
-
-**为什么要单独一个 deps stage？** 因为 `COPY . .`（拷源码）一定会经常变，如果把 `npm ci` 放在拷源码之后，Docker 缓存就失效了，每次都要重装依赖（慢得要命）。把 deps 拆出来后，源码变化不会影响 deps 层的缓存。
-
-**Stage 2 · `builder`（编译项目）**
-- `FROM node:20-alpine AS builder`：新开一个 stage，同样基于 Node
-- `COPY --from=deps /app/node_modules ./node_modules`：把 deps stage 里装好的 `node_modules` **整个目录**拷过来（这就是多阶段构建的妙用）
 - `COPY . .`：把项目源码全部拷进来（`.dockerignore` 排除的文件不会进来）
 - `ARG VITE_API_BASE_URL=`：声明一个**构建参数**，默认值空字符串。`ARG` 只在构建期可用
 - `ENV VITE_API_BASE_URL=$VITE_API_BASE_URL`：把构建参数提升为环境变量，让 Vite 在执行 `npm run build` 时能读到。Vite 约定所有 `VITE_*` 开头的环境变量会被打进前端 bundle
 - `RUN npm run build`：执行 `package.json` 里的 `build` 脚本（`tsc -b && vite build`），产出 `/app/dist/`
 
-**Stage 3 · `runner`（最终运行）**
+**Stage 2 · `runner`（最终运行）**
 - `FROM nginx:alpine AS runner`：换基础镜像！这次用 nginx alpine（~25MB），因为运行期只需要一个 web server 服务静态文件，**不需要 Node 了**
 - `COPY nginx.conf /etc/nginx/conf.d/default.conf`：把项目里的 `nginx.conf` 放到 nginx 的默认配置位置（覆盖默认的 server block）
 - `COPY --from=builder /app/dist /usr/share/nginx/html`：从 builder stage 把构建产物 `dist/` 拷到 nginx 的默认网站根目录
@@ -125,9 +124,18 @@ CMD ["nginx", "-g", "daemon off;"]
 
 **最终镜像里有什么？** 只有 nginx + `dist/` 静态文件 + 配置文件。**没有** Node、没有 npm、没有 `node_modules`、没有源码、没有 lockfile。
 
-> **Node 版本选择**：用 `node:20-alpine` 而不是 22。Node 22 + 自带 npm 10.x 在 BuildKit cache mount 下有已知 bug（`npm error Exit handler never called!`），构建直接失败。Node 20 LTS 是当前最稳的选择。如果非要用 22，需要在 `npm ci` 前加一步 `npm install -g npm@latest` 升级到 npm 11.x。
->
-> **Vite vs Next.js 注意**：Next.js 用 `output:'standalone'` 出 `server.js`，runtime 必须 Node；Vite 出纯静态 `dist/`，用 nginx 更小更快。**runtime stage 不能照搬 Next.js 项目的写法**。
+**关于 `# syntax=docker/dockerfile:1`**：这是 BuildKit 的语法指令，启用 `--mount=type=cache` 等新特性。但它会触发 Docker 去 Docker Hub 拉 `docker/dockerfile:1` 镜像，**在国内网络环境会超时**。本项目暂未加这行——现代 Docker Desktop 默认已经启用 BuildKit，cache mount 仍然能用。如果一定要加，建议先在 Docker Desktop 配国内镜像加速。
+
+**踩坑实录 1：Node 版本**
+最初用 `node:22-alpine`，碰到 `npm error Exit handler never called!`——Node 22 自带的 npm 10.x 在 BuildKit cache mount 下有已知 bug，构建直接失败。**Node 20 LTS 是最稳的选择**。如果非要用 22，需要在 `npm ci` 前加一步 `npm install -g npm@latest` 升级到 npm 11.x。
+
+**踩坑实录 2：跨 stage `COPY --from=deps node_modules` 丢失 `.bin` 软链**
+最初是三段式（deps + builder + runner），builder 里 `COPY --from=deps /app/node_modules ./node_modules`。结果 GHA 上构建报 `sh: tsc: not found`，因为 `.bin/` 目录下的软链没复制过来。**两段式合并 deps 和 builder 后问题消失**。
+
+**踩坑实录 3（最严重）：`npm ci` 在 CI 上静默失败**
+最初没有 `.npmrc`，`npm ci` 在 GHA runner 上跑 8 分钟（!）才完成，但 `node_modules` 几乎是空的。原因是默认 registry `registry.npmjs.org` 在某些网络环境下连接不稳定，npm 反复 retry 后超时退出码 0 但没装上包。**解决方案：加 `.npmrc` 指定 npmmirror 镜像 + 重试策略**（详见 2.5）。
+
+**Vite vs Next.js 注意**：Next.js 用 `output:'standalone'` 出 `server.js`，runtime 必须 Node；Vite 出纯静态 `dist/`，用 nginx 更小更快。**runtime stage 不能照搬 Next.js 项目的写法**。
 
 #### 2.2 `nginx.conf`（容器内）
 
@@ -158,7 +166,26 @@ dist
 .DS_Store
 ```
 
-#### 2.4 `.github/workflows/deploy.yml`
+#### 2.4 `.npmrc`（关键，决定 CI 能否跑通）
+
+```
+registry=https://registry.npmmirror.com
+replace-registry-host=always
+fetch-retries=5
+fetch-retry-mintimeout=20000
+fetch-retry-maxtimeout=120000
+```
+
+**逐行含义**：
+- `registry=https://registry.npmmirror.com`：换成淘宝/阿里云的 npm 镜像（CDN 全球加速、稳定可达），替代默认的 `registry.npmjs.org`
+- `replace-registry-host=always`：把 `package-lock.json` 里写死的 registry host 也替换掉（lockfile 里每个包都记了下载地址，不替换的话 npm 仍会去原地址拉）
+- `fetch-retries=5` / `fetch-retry-mintimeout=20000` / `fetch-retry-maxtimeout=120000`：失败时重试 5 次，最小 20 秒、最大 120 秒指数退避
+
+**为什么必须加？** 默认的 `registry.npmjs.org` 在 GitHub Actions runner 上经常出现连接不稳定/被限速的情况。npm 默认重试策略很激进但耗时极长，最终可能"超时 → 退出码 0 → 实际没装上包"，导致后续 `npm run build` 报 `tsc: not found` 这种诡异错误。**这是本次部署最难定位的坑**——表象是"找不到 tsc"，根因是依赖压根没装上。
+
+**对应的 Dockerfile 改动**：第 2.1 节里的 `COPY package.json package-lock.json .npmrc ./` 必须把 `.npmrc` 一起拷进容器，否则镜像里的 npm 还是用默认配置。
+
+#### 2.5 `.github/workflows/deploy.yml`
 
 两个 job：`build-push`（构建镜像推 ECR）→ `deploy`（SSH 触发服务器 `docker compose pull + up`）。完整内容见仓库内同名文件。关键变量：
 
@@ -410,17 +437,71 @@ sudo certbot --nginx -d attention.groundedglow.cc \
 
 **踩坑点：nginx -t 报错**——`grep -n "你怀疑的字段" /etc/nginx/sites-enabled/*` 看是不是别的 vhost 重复定义了同名 server_name。
 
-### Step 7 · 推代码触发部署
+### Step 7 · 本地验证 Docker 构建（先做，再 push）
+
+**为什么必须本地验证？** GitHub Actions 单轮构建 5~10 分钟，本地一轮 30~60 秒。Dockerfile 出问题时本地能在几十秒内复现并修复，远比反复 push 等 GHA 反馈高效。**永远是"本地能构建通过 → 才 push"**。
+
+**前置：启动 Docker Desktop**
 
 ```bash
-git add Dockerfile nginx.conf .dockerignore .github/
+open -a Docker    # macOS 启动 Docker Desktop
+docker info       # 验证 daemon 已起，输出一大段 Server 信息即正常
+```
+
+如果是国内网络环境，建议在 Docker Desktop → Settings → Docker Engine 加上 registry 加速：
+
+```json
+{
+  "registry-mirrors": [
+    "https://docker.m.daocloud.io",
+    "https://docker.mirrors.ustc.edu.cn"
+  ]
+}
+```
+
+**完整本地验证流程**
+
+```bash
+cd /Users/eleme/Documents/know-your-attention
+
+# 1. 清旧缓存（第一次或换基础镜像后做一次，平时不用）
+docker builder prune -f
+
+# 2. 构建镜像，起名 kya-test（任意名）
+docker build -t kya-test .
+
+# 3. 跑容器，把宿主机 8888 端口映射到容器内 80 端口
+docker run --rm -p 8888:80 kya-test
+
+# 4. 浏览器访问 http://localhost:8888 → 看到完整页面就是 OK
+# 5. Ctrl+C 退出（--rm 会自动删容器，不留垃圾）
+```
+
+**关键命令解释**
+
+| 命令 | 含义 |
+|---|---|
+| `docker build -t kya-test .` | 用当前目录的 Dockerfile 构建镜像，起名 `kya-test`（自动加 `:latest`），`.` 是构建上下文 |
+| `docker run --rm -p 8888:80 kya-test` | 启动容器；`--rm` 退出后自动删；`-p 宿主机端口:容器端口` 端口映射 |
+| `docker builder prune -f` | 清掉构建缓存（不删完整镜像），怀疑缓存污染时用 |
+| `docker images` | 列出本地所有镜像 |
+| `docker ps` | 列出运行中的容器 |
+
+**镜像 vs 容器**：镜像 = 模板（类比可执行文件），容器 = 镜像跑起来的实例（类比进程）。一个镜像可以同时跑多个容器互不影响。
+
+### Step 8 · 推代码触发部署
+
+本地验证通过后再 push：
+
+```bash
+git add Dockerfile nginx.conf .dockerignore .npmrc .github/
 git commit -m "chore: add docker build & deploy workflow"
 git push origin main
 ```
 
 去 GitHub → Actions 看 workflow 跑完。
 
-### Step 8 · 验证
+### Step 9 · 验证
 
 ```bash
 # 服务器
@@ -440,7 +521,13 @@ sudo docker compose logs attention-fe --tail 30
 > 把所有 `attention` / `know-your-attention` / `8090` 全部替换成新项目的值。
 
 - [ ] **Cloudflare**：A 记录 `<新项目>` → 服务器 IP（灰云）
-- [ ] **项目根目录**：加 `Dockerfile`（用 `node:20-alpine`）/ `nginx.conf` / `.dockerignore` / `.github/workflows/deploy.yml`（只改 `ECR_REPOSITORY` 和镜像名）
+- [ ] **项目根目录**：加 5 个文件
+  - `Dockerfile`（用 `node:20-alpine`，记得 `COPY .npmrc`）
+  - `nginx.conf`（SPA fallback）
+  - `.dockerignore`
+  - **`.npmrc`（必须！否则 GHA 上 npm ci 会静默失败）**
+  - `.github/workflows/deploy.yml`（只改 `ECR_REPOSITORY` 和镜像名）
+- [ ] **本地**：`docker build -t test .` + `docker run -p 8888:80 test` 验证构建能通 + 页面能打开
 - [ ] **GitHub Secrets**：只需新增 `DEPLOY_DIR=/home/ubuntu/<新项目>`（其他 5 个 Secret 可复用）
 - [ ] **AWS ECR**：建仓库 `<新项目>/<新项目>-fe`
 - [ ] **服务器**：`mkdir /home/ubuntu/<新项目>` + 放 `docker-compose.yml` + `.env`（端口排到 8091/8092…）
@@ -478,7 +565,52 @@ curl -I https://<域名>                              # HTTPS 探测
 curl -sI -H "Host: <域名>" http://127.0.0.1/        # 绕过 DNS 直测宿主机 nginx
 ```
 
-## 5. 关键文件位置总结
+## 5. CI 构建常见错误速查（本次踩过的坑全在这）
+
+### 错误 1：`Could not load credentials from any providers`
+`aws-actions/configure-aws-credentials` 读不到 AWS Secret。
+- Secret 名拼写错（必须 `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`，区分大小写）
+- 设到了 Environment secrets 或 Variables，不是 Repository secrets
+- 临时调试：加 `echo "len=${#AWS_ACCESS_KEY_ID}"` 看长度是否为 20/40
+
+### 错误 2：`npm error Exit handler never called!`
+Node 22 + 自带 npm 10.x 在 BuildKit cache mount 下的已知 bug。
+- 方案 A（推荐）：Dockerfile 改用 `node:20-alpine`
+- 方案 B：保留 22，在 `npm ci` 前加 `npm install -g npm@latest`
+
+### 错误 3：`sh: tsc: not found`（构建脚本找不到 CLI）
+跨 stage `COPY --from=deps node_modules` 时 `.bin/` 软链丢失。
+- 方案：合并 deps 和 builder 为同一个 stage（本指南就是这样）
+
+### 错误 4：`failed to resolve source metadata for docker.io/docker/dockerfile:1`
+本地 `docker build` 拉不到语法前端镜像（国内网络）。
+- 方案 A：Docker Desktop 配 registry 加速（见 Step 7）
+- 方案 B：删掉 Dockerfile 第一行 `# syntax=docker/dockerfile:1`
+
+### 错误 5（最隐蔽）：`npm ci` 跑了几百秒后 `node_modules/.bin/` 不存在
+**典型表现**：GHA 上 `npm ci` 跑 8 分钟"成功"，但实际啥也没装上，后续 `npm run build` 报 `tsc: not found`。
+**根因**：默认 registry `registry.npmjs.org` 在 GHA runner 上连接不稳定，npm 反复 timeout 重试后退出码 0 但未实际安装。
+**解决**：项目根目录加 `.npmrc`（详见 2.4）：
+```
+registry=https://registry.npmmirror.com
+replace-registry-host=always
+fetch-retries=5
+fetch-retry-mintimeout=20000
+fetch-retry-maxtimeout=120000
+```
+然后 Dockerfile 里 `COPY package.json package-lock.json .npmrc ./`。
+
+### 错误 6：GHA 反复用上次的坏缓存
+Workflow 里 `cache-from: type=gha` 会把构建中间状态存起来，上次有问题的缓存可能被反复"复活"。
+- 解决：GitHub 仓库 → Actions → 左侧 "Caches" → 全部删除，再 push
+
+### 排查心法
+1. **失败先想"和成功的项目差什么"**：本次部署最难的一个 bug（错误 5）就是通过对比已部署成功的 `light-blog-fe` 仓库的 `.npmrc` 找到的
+2. **本地不能复现就加 verbose 日志**：`npm ci --loglevel=http`、`time` 前缀、`ls -la node_modules/.bin/` 输出当前状态，让 CI 把内部情况打出来
+3. **症状不等于根因**：本次根因是 npm ci 没装上包，但症状是 `tsc: not found`——直接搜症状很难找到答案
+4. **永远本地验证再 push**：节省的反馈循环时间能多解决十倍问题
+
+## 6. 关键文件位置总结
 
 | 文件 | 位置 | 改了之后要做什么 |
 |---|---|---|
