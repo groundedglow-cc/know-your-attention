@@ -99,6 +99,29 @@
   cursor: pointer;
   transition: all 0.12s;
 }
+
+/* 拖拽行 */
+.drag-row {
+  position: relative;
+}
+/* 指示线悬浮在事项之间的间隙正中（事项 margin 是 6px，线居中于间隙） */
+.drag-row.drop-before::before,
+.drag-row.drop-after::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #2563eb;
+  border-radius: 2px;
+  box-shadow: 0 0 6px rgba(37, 99, 235, 0.45);
+  pointer-events: none;
+  z-index: 10;
+}
+.drag-row.drop-before::before { top: -4px; }
+.drag-row.drop-after::after { bottom: -4px; }
+/* 拖拽中的源行降低不透明度 */
+.drag-row[draggable='true']:active { opacity: 0.6; }
 .item:hover { border-color: #d1d5db; }
 .item.selected {
   border-color: #2563eb;

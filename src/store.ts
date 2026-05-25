@@ -46,13 +46,8 @@ function pauseAll(tasks: Task[]): Task[] {
 }
 
 export function sortTasks(tasks: Task[]): Task[] {
-  const pinned = tasks
-    .filter((t) => t.pinned)
-    .sort((a, b) => (b.pinnedAt ?? 0) - (a.pinnedAt ?? 0));
-  const normal = tasks
-    .filter((t) => !t.pinned)
-    .sort((a, b) => a.createdAt - b.createdAt);
-  return [...pinned, ...normal];
+  // 数组顺序即用户排序；pinned 整体置顶，组内保持各自相对顺序。
+  return [...tasks.filter((t) => t.pinned), ...tasks.filter((t) => !t.pinned)];
 }
 
 export function useTaskStore() {
@@ -208,6 +203,51 @@ export function useTaskStore() {
     );
   }, []);
 
+  // 拖拽排序：同 pinned 组内才允许移动
+  const reorderTask = useCallback(
+    (sourceId: string, targetId: string, position: 'before' | 'after') => {
+      if (sourceId === targetId) return;
+      setTasks((prev) => {
+        const srcIdx = prev.findIndex((t) => t.id === sourceId);
+        const tgtIdx = prev.findIndex((t) => t.id === targetId);
+        if (srcIdx === -1 || tgtIdx === -1) return prev;
+        if (prev[srcIdx].pinned !== prev[tgtIdx].pinned) return prev;
+        const arr = [...prev];
+        const [moved] = arr.splice(srcIdx, 1);
+        const newTgtIdx = arr.findIndex((t) => t.id === targetId);
+        arr.splice(newTgtIdx + (position === 'after' ? 1 : 0), 0, moved);
+        return arr;
+      });
+    },
+    [],
+  );
+
+  // 子项排序：仅在同父任务内允许
+  const reorderSub = useCallback(
+    (
+      parentId: string,
+      sourceSubId: string,
+      targetSubId: string,
+      position: 'before' | 'after',
+    ) => {
+      if (sourceSubId === targetSubId) return;
+      setTasks((prev) =>
+        prev.map((t) => {
+          if (t.id !== parentId) return t;
+          const srcIdx = t.children.findIndex((s) => s.id === sourceSubId);
+          const tgtIdx = t.children.findIndex((s) => s.id === targetSubId);
+          if (srcIdx === -1 || tgtIdx === -1) return t;
+          const arr = [...t.children];
+          const [moved] = arr.splice(srcIdx, 1);
+          const newTgtIdx = arr.findIndex((s) => s.id === targetSubId);
+          arr.splice(newTgtIdx + (position === 'after' ? 1 : 0), 0, moved);
+          return { ...t, children: arr };
+        }),
+      );
+    },
+    [],
+  );
+
   return {
     tasks,
     sorted: sortTasks(tasks),
@@ -221,6 +261,8 @@ export function useTaskStore() {
     updateEmoji,
     removeTask,
     removeSub,
+    reorderTask,
+    reorderSub,
   };
 }
 

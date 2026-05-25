@@ -61,6 +61,16 @@ export default function App() {
   const [editing, setEditing] = useState<Editing>(null);
   const [addingNote, setAddingNote] = useState(false);
 
+  // 拖拽状态：dropKey 形如 't:id' / 's:parentId/subId'，用于显示蓝色指示线
+  const [dropHint, setDropHint] = useState<
+    { key: string; pos: 'before' | 'after' } | null
+  >(null);
+
+  function computeDropPos(e: React.DragEvent<HTMLDivElement>): 'before' | 'after' {
+    const rect = e.currentTarget.getBoundingClientRect();
+    return e.clientY - rect.top < rect.height / 2 ? 'before' : 'after';
+  }
+
   useEffect(() => {
     try {
       localStorage.setItem(PEEK_KEY, String(peekOpacity));
@@ -439,6 +449,8 @@ export default function App() {
               const isEditingTask =
                 !!editing && editing.taskId === t.id && !editing.subId;
               const badge = numberBadgeMap.get(`t:${t.id}`);
+              const taskKey = `t:${t.id}`;
+              const taskCanDrag = !isEditingTask;
               return (
                 <div key={t.id}>
                   {showDivider && idx === firstUnpinnedIdx && (
@@ -446,26 +458,70 @@ export default function App() {
                       <span>其他事项</span>
                     </div>
                   )}
-                  <TaskItem
-                    task={t}
-                    selected={taskSelected}
-                    badge={badge}
-                    editing={isEditingTask}
-                    onSelect={() => setSelected({ kind: 'task', taskId: t.id })}
-                    onEditStart={() => {
-                      setSelected({ kind: 'task', taskId: t.id });
-                      setEditing({ taskId: t.id });
+                  <div
+                    className={
+                      'drag-row' +
+                      (dropHint?.key === taskKey
+                        ? dropHint.pos === 'before'
+                          ? ' drop-before'
+                          : ' drop-after'
+                        : '')
+                    }
+                    draggable={taskCanDrag}
+                    onDragStart={(e) => {
+                      e.dataTransfer.effectAllowed = 'move';
+                      e.dataTransfer.setData(
+                        'application/x-kya',
+                        JSON.stringify({ kind: 'task', id: t.id, pinned: t.pinned }),
+                      );
                     }}
-                    onEditCommit={(text) => {
-                      store.updateText({ taskId: t.id }, text);
-                      setEditing(null);
+                    onDragOver={(e) => {
+                      const raw = e.dataTransfer.types.includes('application/x-kya');
+                      if (!raw) return;
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = 'move';
+                      const pos = computeDropPos(e);
+                      setDropHint({ key: taskKey, pos });
                     }}
-                    onEditCancel={() => setEditing(null)}
-                    onEditEmoji={(em) => store.updateEmoji(t.id, em)}
-                    onToggleStatus={() => store.toggleStatus({ taskId: t.id })}
-                    onTogglePin={() => store.togglePin(t.id)}
-                    onToggleExpand={() => store.setExpanded(t.id, !t.expanded)}
-                  />
+                    onDragLeave={() => {
+                      setDropHint((h) => (h?.key === taskKey ? null : h));
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const raw = e.dataTransfer.getData('application/x-kya');
+                      setDropHint(null);
+                      if (!raw) return;
+                      const data = JSON.parse(raw) as {
+                        kind: 'task' | 'sub';
+                        id: string;
+                        pinned?: boolean;
+                      };
+                      if (data.kind !== 'task') return;
+                      if (data.pinned !== t.pinned) return; // 不允许跨 pinned 组
+                      store.reorderTask(data.id, t.id, computeDropPos(e));
+                    }}
+                  >
+                    <TaskItem
+                      task={t}
+                      selected={taskSelected}
+                      badge={badge}
+                      editing={isEditingTask}
+                      onSelect={() => setSelected({ kind: 'task', taskId: t.id })}
+                      onEditStart={() => {
+                        setSelected({ kind: 'task', taskId: t.id });
+                        setEditing({ taskId: t.id });
+                      }}
+                      onEditCommit={(text) => {
+                        store.updateText({ taskId: t.id }, text);
+                        setEditing(null);
+                      }}
+                      onEditCancel={() => setEditing(null)}
+                      onEditEmoji={(em) => store.updateEmoji(t.id, em)}
+                      onToggleStatus={() => store.toggleStatus({ taskId: t.id })}
+                      onTogglePin={() => store.togglePin(t.id)}
+                      onToggleExpand={() => store.setExpanded(t.id, !t.expanded)}
+                    />
+                  </div>
                   {t.expanded &&
                     t.children.map((s) => {
                       const subSelected =
@@ -478,33 +534,84 @@ export default function App() {
                         editing.taskId === t.id &&
                         editing.subId === s.id;
                       const sBadge = numberBadgeMap.get(`s:${s.id}`);
+                      const subKey = `s:${t.id}/${s.id}`;
+                      const subCanDrag = !isEditingSub;
                       return (
-                        <SubTaskItem
+                        <div
                           key={s.id}
-                          sub={s}
-                          selected={subSelected}
-                          badge={sBadge}
-                          editing={isEditingSub}
-                          onSelect={() =>
-                            setSelected({ kind: 'sub', taskId: t.id, subId: s.id })
+                          className={
+                            'drag-row' +
+                            (dropHint?.key === subKey
+                              ? dropHint.pos === 'before'
+                                ? ' drop-before'
+                                : ' drop-after'
+                              : '')
                           }
-                          onEditStart={() => {
-                            setSelected({
-                              kind: 'sub',
-                              taskId: t.id,
-                              subId: s.id,
-                            });
-                            setEditing({ taskId: t.id, subId: s.id });
+                          draggable={subCanDrag}
+                          onDragStart={(e) => {
+                            e.dataTransfer.effectAllowed = 'move';
+                            e.dataTransfer.setData(
+                              'application/x-kya',
+                              JSON.stringify({
+                                kind: 'sub',
+                                id: s.id,
+                                parentId: t.id,
+                              }),
+                            );
                           }}
-                          onEditCommit={(text) => {
-                            store.updateText({ taskId: t.id, subId: s.id }, text);
-                            setEditing(null);
+                          onDragOver={(e) => {
+                            const raw =
+                              e.dataTransfer.types.includes('application/x-kya');
+                            if (!raw) return;
+                            e.preventDefault();
+                            e.dataTransfer.dropEffect = 'move';
+                            setDropHint({ key: subKey, pos: computeDropPos(e) });
                           }}
-                          onEditCancel={() => setEditing(null)}
-                          onToggleStatus={() =>
-                            store.toggleStatus({ taskId: t.id, subId: s.id })
-                          }
-                        />
+                          onDragLeave={() => {
+                            setDropHint((h) => (h?.key === subKey ? null : h));
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            const raw =
+                              e.dataTransfer.getData('application/x-kya');
+                            setDropHint(null);
+                            if (!raw) return;
+                            const data = JSON.parse(raw) as {
+                              kind: 'task' | 'sub';
+                              id: string;
+                              parentId?: string;
+                            };
+                            if (data.kind !== 'sub') return;
+                            if (data.parentId !== t.id) return; // 不允许跨父任务
+                            store.reorderSub(t.id, data.id, s.id, computeDropPos(e));
+                          }}
+                        >
+                          <SubTaskItem
+                            sub={s}
+                            selected={subSelected}
+                            badge={sBadge}
+                            editing={isEditingSub}
+                            onSelect={() =>
+                              setSelected({ kind: 'sub', taskId: t.id, subId: s.id })
+                            }
+                            onEditStart={() => {
+                              setSelected({
+                                kind: 'sub',
+                                taskId: t.id,
+                                subId: s.id,
+                              });
+                              setEditing({ taskId: t.id, subId: s.id });
+                            }}
+                            onEditCommit={(text) => {
+                              store.updateText({ taskId: t.id, subId: s.id }, text);
+                              setEditing(null);
+                            }}
+                            onEditCancel={() => setEditing(null)}
+                            onToggleStatus={() =>
+                              store.toggleStatus({ taskId: t.id, subId: s.id })
+                            }
+                          />
+                        </div>
                       );
                     })}
                   {adding?.kind === 'sub' && adding.taskId === t.id && (

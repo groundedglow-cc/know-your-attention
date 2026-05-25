@@ -230,6 +230,30 @@ env:
 
 `AWS_ACCESS_KEY_ID` 长度应是 20，`AWS_SECRET_ACCESS_KEY` 长度应是 40。如果输出 0，说明根本没读到 → 回去检查名字和录入位置。
 
+**组织级 Secret 推荐架构（多项目复用必看）**：
+
+如果仓库在 GitHub Organization 下（如 `groundedglow-cc`），强烈推荐把多仓库共用的 Secret 提到**组织级**，仓库级只保留**该项目独有**的。这样新项目接入时几乎零配置。
+
+GitHub Secret 优先级（高 → 低）：`Environment > Repository > Organization`。三层同名时高优先级覆盖低优先级；只有低优先级有时低优先级生效。
+
+**推荐分层**：
+
+| 层级 | Secret | 原因 |
+|---|---|---|
+| **组织级**（共用） | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_REGION` | 同一 IAM user 推所有项目 |
+| **组织级**（共用） | `SERVER_HOST` / `SERVER_USER` / `SERVER_SSH_KEY` / `SERVER_PORT` | 同一台服务器 |
+| **仓库级**（独有） | `DEPLOY_DIR` | 每个项目部署目录不同 |
+
+**配置步骤**：
+
+1. 组织 secret 页面：`https://github.com/organizations/<组织名>/settings/secrets/actions` → New organization secret → 录入 7 个共用 Secret
+2. **Repository access** 选 `All repositories`（最省心）或 `Selected repositories`（精确控制）
+3. 仓库 secret 页面：删掉同名的 7 个（如果之前在仓库级录过），只保留 `DEPLOY_DIR`
+4. 在组织 secret 列表里若某条显示 `This secret is overridden by a repository secret`，说明仓库级还有同名残留，去仓库级删干净
+5. push 一次空 commit 触发 workflow 验证：`git commit --allow-empty -m "ci: verify org secrets"` + `git push`
+
+**后续新项目接入**：仓库 secret 只录 1 个 `DEPLOY_DIR`，其他 7 个自动继承组织级，省去重复录入。
+
 ### Step 4 · AWS ECR 创建镜像仓库
 
 控制台 → ECR → Create repository：
