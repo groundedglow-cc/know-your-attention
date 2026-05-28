@@ -42,9 +42,12 @@ export function TaskItem({
     liveMs(task) + task.children.reduce((acc, s) => acc + liveMs(s), 0);
   const isRunning =
     task.status === 'running' || task.children.some((s) => s.status === 'running');
+  // 父任务的"贪吃蛇"边框只在父任务自己处于 running 时显示；
+  // 子任务在跑时，由子任务自己显示边框，父任务保持安静。
+  const showSnake = task.status === 'running';
   return (
     <div
-      className={`item ${selected ? 'selected' : ''} ${task.status === 'done' ? 'done' : ''} ${isRunning ? 'running' : ''}`}
+      className={`item ${selected ? 'selected' : ''} ${task.status === 'done' ? 'done' : ''} ${showSnake ? 'running' : ''}`}
       onClick={onSelect}
       onDoubleClick={(e) => {
         e.stopPropagation();
