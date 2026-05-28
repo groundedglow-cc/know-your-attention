@@ -1,0 +1,122 @@
+.dn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0;
+  background: transparent;
+}
+.dn-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.dn-btn:hover {
+  color: #2563eb;
+}
+.dn-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #111827;
+  cursor: pointer;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.dn-text,
+.dn-sub {
+  white-space: nowrap;
+}
+.dn-label:hover {
+  color: #1d4ed8;
+}
+.dn-label.today {
+  color: #1d4ed8;
+}
+.dn-text {
+  font-weight: 600;
+}
+.dn-sub {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  color: #6b7280;
+}
+.dn-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 搬运提示条 */
+.carry-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0 4px;
+  padding: 8px 12px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #92400e;
+}
+.carry-bar-text {
+  flex: 1;
+  min-width: 0;
+}
+.carry-bar-actions {
+  display: inline-flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.carry-bar button {
+  border: 1px solid #fbbf24;
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.carry-bar button:hover {
+  background: #fde68a;
+}
+.carry-bar button.primary {
+  background: #f59e0b;
+  border-color: #f59e0b;
+  color: #fff;
+}
+.carry-bar button.primary:hover {
+  background: #d97706;
+}
+.carry-bar button.ghost {
+  background: transparent;
+  border-color: transparent;
+  color: #92400e;
+}
+.carry-bar button.ghost:hover {
+  background: #fef3c7;
+}

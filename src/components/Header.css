@@ -9,6 +9,13 @@
   background: #fff;
   border-bottom: 1px solid #eef0f3;
 }
+.hd-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
 .hd-brand {
   display: flex;
   align-items: center;
@@ -16,10 +23,14 @@
   color: #2563eb;
 }
 .hd-logo {
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   flex: 0 0 auto;
   display: block;
+  transition: transform 0.25s ease;
+}
+.hd-brand:hover .hd-logo {
+  transform: rotate(-12deg) scale(1.08);
 }
 .hd-title {
   font-family: 'Georgia', 'Times New Roman', 'Cormorant Garamond',

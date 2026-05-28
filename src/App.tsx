@@ -6,10 +6,12 @@ import { SubTaskItem } from './components/SubTaskItem';
 import { Tabs, type TabKey } from './components/Tabs';
 import { NotesView } from './components/NotesView';
 import { NotePanel } from './components/NotePanel';
+import { DateNav } from './components/DateNav';
 import { useTaskNotes } from './taskNotesStore';
 import { useTaskStore } from './store';
 import { useTicker } from './hooks/useTicker';
 import { ShortcutHelp } from './components/ShortcutHelp';
+import { shiftDateKey, todayKey } from './utils/time';
 import type { SelectedPath } from './types';
 import './App.css';
 
@@ -56,6 +58,7 @@ export default function App() {
     typeof document === 'undefined' ? true : document.hasFocus(),
   );
   const [tab, setTab] = useState<TabKey>('tasks');
+  const [selectedDate, setSelectedDate] = useState<string>(() => todayKey());
   const [selected, setSelected] = useState<SelectedPath>(null);
   const [adding, setAdding] = useState<Adding>(null);
   const [editing, setEditing] = useState<Editing>(null);
@@ -97,18 +100,36 @@ export default function App() {
   const dim = !windowFocused && peekOpacity < 100;
 
   const visibleTasks = useMemo(() => {
-    if (showDone) return store.sorted;
-    return store.sorted
+    const ofDate = store.sorted.filter((t) => t.dateKey === selectedDate);
+    if (showDone) return ofDate;
+    return ofDate
       .filter((t) => t.status !== 'done')
       .map((t) => ({
         ...t,
         children: t.children.filter((s) => s.status !== 'done'),
       }));
-  }, [store.sorted, showDone]);
+  }, [store.sorted, showDone, selectedDate]);
 
   const doneTaskCount = useMemo(
-    () => store.sorted.filter((t) => t.status === 'done').length,
-    [store.sorted],
+    () =>
+      store.sorted.filter(
+        (t) => t.dateKey === selectedDate && t.status === 'done',
+      ).length,
+    [store.sorted, selectedDate],
+  );
+
+  const dateTaskCount = useMemo(
+    () => store.sorted.filter((t) => t.dateKey === selectedDate).length,
+    [store.sorted, selectedDate],
+  );
+
+  // 比当前日期更早、且仍未完成的任务，可一键搬到当前日期。
+  const carriableTasks = useMemo(
+    () =>
+      store.sorted.filter(
+        (t) => t.dateKey < selectedDate && t.status !== 'done',
+      ),
+    [store.sorted, selectedDate],
   );
 
   const flat = useMemo(() => {
@@ -225,6 +246,24 @@ export default function App() {
 
       // 以下仅在事项 tab 生效
       if (tab !== 'tasks') return;
+
+      // T 回到今天
+      if (!e.shiftKey && (e.key === 't' || e.key === 'T')) {
+        e.preventDefault();
+        setSelectedDate(todayKey());
+        return;
+      }
+      // , 前一天 / . 后一天
+      if (!e.shiftKey && e.key === ',') {
+        e.preventDefault();
+        setSelectedDate((d) => shiftDateKey(d, -1));
+        return;
+      }
+      if (!e.shiftKey && e.key === '.') {
+        e.preventDefault();
+        setSelectedDate((d) => shiftDateKey(d, 1));
+        return;
+      }
 
       // H 切换显示/隐藏已完成
       if (!e.shiftKey && (e.key === 'h' || e.key === 'H')) {
@@ -351,12 +390,28 @@ export default function App() {
 
   const submitAdd = (text: string, emoji: string) => {
     if (!adding) return;
+    const hasRunning = store.tasks.some(
+      (t) =>
+        t.status === 'running' || t.children.some((s) => s.status === 'running'),
+    );
+    const startNew = (path: { taskId: string; subId?: string }) => {
+      if (!hasRunning) {
+        store.toggleStatus(path);
+        return;
+      }
+      const ok = window.confirm(
+        '当前已有事项正在进行中，是否切换到新事项？',
+      );
+      if (ok) store.toggleStatus(path);
+    };
     if (adding.kind === 'top') {
-      const id = store.addTask(emoji, text);
+      const id = store.addTask(emoji, text, selectedDate);
       setSelected({ kind: 'task', taskId: id });
+      startNew({ taskId: id });
     } else {
       const subId = store.addSubTask(adding.taskId, text);
       setSelected({ kind: 'sub', taskId: adding.taskId, subId });
+      startNew({ taskId: adding.taskId, subId });
     }
     setAdding(null);
   };
@@ -396,6 +451,14 @@ export default function App() {
         onPeekChange={setPeekOpacity}
         showDone={showDone}
         onToggleShowDone={() => setShowDone((v) => !v)}
+        center={
+          tab === 'tasks' ? (
+            <DateNav
+              dateKey={selectedDate}
+              onChange={setSelectedDate}
+            />
+          ) : null
+        }
       />
       <Tabs active={tab} onChange={setTab} />
       <div className="content">
@@ -407,6 +470,38 @@ export default function App() {
                 onSubmit={submitAdd}
                 onCancel={() => setAdding(null)}
               />
+            )}
+            {carriableTasks.length > 0 && (
+              <div className="carry-bar">
+                <span className="carry-bar-text">
+                  早些时候有 {carriableTasks.length} 个未完成事项
+                </span>
+                <span className="carry-bar-actions">
+                  <button
+                    type="button"
+                    className="primary"
+                    onClick={() =>
+                      store.carryForward(
+                        carriableTasks.map((t) => t.id),
+                        selectedDate,
+                      )
+                    }
+                    title="把全部未完成搬到当前日期"
+                  >
+                    全部搬过来
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() =>
+                      setSelectedDate(carriableTasks[carriableTasks.length - 1].dateKey)
+                    }
+                    title="跳到最近一个有未完成事项的日期"
+                  >
+                    去看看
+                  </button>
+                </span>
+              </div>
             )}
             <div className="task-toolbar">
               <label
@@ -438,9 +533,9 @@ export default function App() {
             </div>
             {visibleTasks.length === 0 && !adding && (
               <div className="empty">
-                {store.sorted.length === 0
-                  ? '还没有事项。点 ＋ 或按 N 添加'
-                  : '没有进行中的事项。按 H 显示已完成'}
+                {dateTaskCount === 0
+                  ? `${selectedDate === todayKey() ? '今天' : selectedDate} 还没有事项。点 ＋ 或按 N 添加`
+                  : '当前日期没有进行中的事项。按 H 显示已完成'}
               </div>
             )}
             {visibleTasks.map((t, idx) => {

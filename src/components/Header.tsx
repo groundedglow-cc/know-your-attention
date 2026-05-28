@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import './Header.css';
 import { MoreMenu } from './MoreMenu';
 
@@ -7,6 +8,7 @@ interface Props {
   onPeekChange: (v: number) => void;
   showDone: boolean;
   onToggleShowDone: () => void;
+  center?: ReactNode;
 }
 
 export function Header({
@@ -15,6 +17,7 @@ export function Header({
   onPeekChange,
   showDone,
   onToggleShowDone,
+  center,
 }: Props) {
   return (
     <header className="hd">
@@ -25,32 +28,43 @@ export function Header({
           xmlns="http://www.w3.org/2000/svg"
           aria-hidden="true"
         >
-          {/* 外圈：散乱的注意力（虚线、淡） */}
-          <circle
-            cx="12"
-            cy="12"
-            r="10"
+          <defs>
+            <linearGradient id="hd-logo-grad" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="50%" stopColor="#f472b6" />
+              <stop offset="100%" stopColor="#6366f1" />
+            </linearGradient>
+          </defs>
+          {/* 圆乎乎的小脸 */}
+          <circle cx="12" cy="13" r="9" fill="url(#hd-logo-grad)" />
+          {/* 眨眼：左眼弯弯，右眼圆圆 */}
+          <path
+            d="M7.8 12.2 Q9 10.8 10.2 12.2"
             fill="none"
-            stroke="currentColor"
-            strokeWidth="1.4"
-            strokeDasharray="2 2.5"
-            opacity="0.35"
-          />
-          {/* 中圈：被聚拢的注意力 */}
-          <circle
-            cx="12"
-            cy="12"
-            r="6"
-            fill="none"
-            stroke="currentColor"
+            stroke="#fff"
             strokeWidth="1.6"
-            opacity="0.7"
+            strokeLinecap="round"
           />
-          {/* 中心：当下投入的焦点 */}
-          <circle cx="12" cy="12" r="2.6" fill="currentColor" />
+          <circle cx="15" cy="11.6" r="1.1" fill="#fff" />
+          {/* 微笑 */}
+          <path
+            d="M8.5 15.4 Q12 18 15.5 15.4"
+            fill="none"
+            stroke="#fff"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+          />
+          {/* 头顶小亮星 */}
+          <path
+            d="M19.5 4 L20.4 5.6 L22 6.5 L20.4 7.4 L19.5 9 L18.6 7.4 L17 6.5 L18.6 5.6 Z"
+            fill="#fde047"
+            stroke="#f59e0b"
+            strokeWidth="0.4"
+            strokeLinejoin="round"
+          />
         </svg>
-        <div className="hd-title">Know Your Attention</div>
       </div>
+      {center && <div className="hd-center">{center}</div>}
       <div className="hd-actions">
         <button
           className="hd-add"

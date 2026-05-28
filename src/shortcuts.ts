@@ -118,6 +118,27 @@ export const SHORTCUTS: ShortcutDef[] = [
     keysLabel: 'H',
   },
   {
+    id: 'date-today',
+    group: 'tasks',
+    scope: ['tasks'],
+    label: '回到今天',
+    keysLabel: 'T',
+  },
+  {
+    id: 'date-prev',
+    group: 'tasks',
+    scope: ['tasks'],
+    label: '前一天',
+    keysLabel: ',',
+  },
+  {
+    id: 'date-next',
+    group: 'tasks',
+    scope: ['tasks'],
+    label: '后一天',
+    keysLabel: '.',
+  },
+  {
     id: 'edit-enter',
     group: 'tasks',
     scope: ['tasks', 'selected'],

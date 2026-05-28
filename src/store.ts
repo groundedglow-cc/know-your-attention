@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Status, SubTask, Task } from './types';
-import { uid } from './utils/time';
+import { toDateKey, todayKey, uid } from './utils/time';
 
 const STORAGE_KEY = 'kya.tasks';
 
@@ -10,7 +10,10 @@ function load(): Task[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw) as Task[];
     if (!Array.isArray(parsed)) return [];
-    return parsed;
+    // 一次性迁移：老数据没有 dateKey，按 createdAt 推断为对应日期。
+    return parsed.map((t) =>
+      t.dateKey ? t : { ...t, dateKey: toDateKey(t.createdAt || Date.now()) },
+    );
   } catch {
     return [];
   }
@@ -59,7 +62,7 @@ export function useTaskStore() {
     save(tasks);
   }, [tasks]);
 
-  const addTask = useCallback((emoji: string, text: string) => {
+  const addTask = useCallback((emoji: string, text: string, dateKey?: string) => {
     const t: Task = {
       id: uid(),
       emoji: emoji || '📝',
@@ -70,6 +73,7 @@ export function useTaskStore() {
       expanded: true,
       children: [],
       createdAt: Date.now(),
+      dateKey: dateKey || todayKey(),
     };
     setTasks((prev) => [...prev, t]);
     return t.id;
@@ -248,6 +252,28 @@ export function useTaskStore() {
     [],
   );
 
+  // 把一组任务搬运到目标日期（默认今天）。同时停止运行中的计时，避免跨日异常累计。
+  const carryForward = useCallback((taskIds: string[], targetDate?: string) => {
+    if (taskIds.length === 0) return;
+    const target = targetDate || todayKey();
+    const idSet = new Set(taskIds);
+    setTasks((prev) =>
+      prev.map((t) => {
+        if (!idSet.has(t.id)) return t;
+        if (t.dateKey === target) return t;
+        const settled = {
+          ...settleRunning(t),
+          children: t.children.map(settleRunning),
+        };
+        return {
+          ...settled,
+          dateKey: target,
+          carriedFrom: settled.carriedFrom ?? settled.dateKey,
+        };
+      }),
+    );
+  }, []);
+
   return {
     tasks,
     sorted: sortTasks(tasks),
@@ -263,6 +289,7 @@ export function useTaskStore() {
     removeSub,
     reorderTask,
     reorderSub,
+    carryForward,
   };
 }
 
