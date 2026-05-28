@@ -44,7 +44,7 @@ export function TaskItem({
     task.status === 'running' || task.children.some((s) => s.status === 'running');
   return (
     <div
-      className={`item ${selected ? 'selected' : ''} ${task.status === 'done' ? 'done' : ''}`}
+      className={`item ${selected ? 'selected' : ''} ${task.status === 'done' ? 'done' : ''} ${isRunning ? 'running' : ''}`}
       onClick={onSelect}
       onDoubleClick={(e) => {
         e.stopPropagation();

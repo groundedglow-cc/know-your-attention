@@ -30,7 +30,7 @@ export function SubTaskItem({
 }: Props) {
   return (
     <div
-      className={`item sub ${selected ? 'selected' : ''} ${sub.status === 'done' ? 'done' : ''}`}
+      className={`item sub ${selected ? 'selected' : ''} ${sub.status === 'done' ? 'done' : ''} ${sub.status === 'running' ? 'running' : ''}`}
       onClick={onSelect}
       onDoubleClick={(e) => {
         e.stopPropagation();

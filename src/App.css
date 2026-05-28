@@ -134,6 +134,49 @@
   background: #fafbfc;
 }
 
+/* 进行中：绕圈的"贪吃蛇"边框 */
+@property --snake-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+.item.running {
+  border-color: transparent;
+  isolation: isolate;
+}
+.item.running::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 11px;
+  padding: 2px;
+  background: conic-gradient(
+    from var(--snake-angle),
+    transparent 0deg,
+    rgba(22, 163, 74, 0.15) 30deg,
+    #22c55e 70deg,
+    #4ade80 90deg,
+    #22c55e 110deg,
+    rgba(22, 163, 74, 0.15) 150deg,
+    transparent 180deg,
+    transparent 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: snake-run 2.4s linear infinite;
+  z-index: 0;
+}
+@keyframes snake-run {
+  to { --snake-angle: 360deg; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .item.running::before { animation: none; }
+}
+
 .item .badge {
   position: absolute;
   left: -10px;
