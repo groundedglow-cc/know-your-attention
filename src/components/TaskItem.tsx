@@ -67,6 +67,7 @@ export function TaskItem({
           <button
             type="button"
             className="emoji emoji-edit-btn"
+            onMouseDown={(e) => e.preventDefault()}
             onClick={(e) => {
               e.stopPropagation();
               setPicking((p) => !p);
