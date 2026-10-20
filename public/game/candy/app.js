@@ -13,6 +13,8 @@ $('#sound-toggle').onclick=()=>{sounds.toggle();updateSoundButton();};updateSoun
 function blocked(message){sounds.play('blocked');if(message)say(message);}
 // Disabled controls still explain their state with a soft sound on pointer input.
 document.addEventListener('pointerdown',e=>{if(e.target.closest('button:disabled'))sounds.play('blocked');},true);
+document.addEventListener('selectstart',e=>e.preventDefault(),{passive:false});
+document.addEventListener('contextmenu',e=>{if(e.target.closest('#board,#palette,#trash,#guide'))e.preventDefault();});
 $('#hint-buddy').innerHTML=buddy;
 $('#basket-art').innerHTML=basket;
 
