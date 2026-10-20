@@ -12,7 +12,7 @@ for(const l of levels) test(`Booklet level ${l.id} is solvable, fills every spac
  assert.equal(complete(l,broken),false);assert.equal(solve(l,broken),null);assert.equal(hint(l,broken).error,true);
 });
 test('Booklet endpoints and STOP positions are transcribed exactly',()=>{
- assert.deepEqual(levels.map(l=>[l.stops,l.start.index,l.start.direction,l.end.index,l.end.direction]),[
+ assert.deepEqual(levels.slice(0,4).map(l=>[l.stops,l.start.index,l.start.direction,l.end.index,l.end.direction]),[
  [[0,1,2,5,6],3,1,8,3],[[0,1,3,8],2,2,6,1],[[0,3,5,8],6,1,2,3],[[3,6],2,2,0,1]]);
 });
 test('Rotation, blocked edges, and empty boards',()=>{
@@ -25,7 +25,7 @@ test('Start at first unfinished level, even if later levels were completed; all 
  assert.equal(firstUnfinished(levels,new Set()),0);
  assert.equal(firstUnfinished(levels,new Set([1,3])),1);
  assert.equal(firstUnfinished(levels,new Set([1,2,3])),3);
- assert.equal(firstUnfinished(levels,new Set([1,2,3,4])),0);
+ assert.equal(firstUnfinished(levels,new Set(levels.map(l=>l.id))),0);
 });
 test('Reset or undo removes completion; restoring a solved board earns it again',async()=>{
  const { syncCompletion,firstUnfinished }=await import('../public/game/candy/progress.js');
