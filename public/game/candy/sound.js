@@ -4,15 +4,17 @@ export function createSounds({ createContext, storage } = {}) {
   let context, enabled=true, lastPlayed=-Infinity;
   try { enabled=storage?.getItem('candy-sound')!=='off'; } catch {}
   const melodies={
-    rotate:[[600,900,0,.07]],
-    recycle:[[660,440,0,.10],[440,260,.08,.13]],
-    blocked:[[240,190,0,.09],[190,160,.11,.09]],
-    place:[[500,690,0,.08]],
-    success:[[523,523,0,.14],[659,659,.14,.14],[784,784,.28,.22]],
-    guide:[[520,720,0,.10],[720,920,.10,.13]],
-    guideRotate:[[520,780,0,.08],[780,1040,.08,.13]],
-    guideDone:[[523,523,0,.12],[659,659,.12,.12],[784,784,.24,.20]],
+    // Small major-key gestures feel playful without becoming distracting.
+    rotate:[[660,1040,0,.075]],
+    recycle:[[740,980,0,.085],[980,720,.08,.12]],
+    blocked:[[320,240,0,.075],[240,205,.08,.075]],
+    place:[[560,820,0,.085]],
+    success:[[659,659,0,.12],[784,784,.12,.12],[1047,1047,.24,.20]],
+    guide:[[587,880,0,.09],[880,1175,.09,.12]],
+    guideRotate:[[587,880,0,.075],[880,1175,.075,.12]],
+    guideDone:[[659,659,0,.11],[784,784,.11,.11],[1047,1047,.22,.19]],
   };
+  const waves={blocked:'triangle',rotate:'triangle',place:'sine',recycle:'sine',success:'triangle',guide:'triangle',guideRotate:'triangle',guideDone:'triangle'};
   async function play(name) {
     if(!enabled||!melodies[name])return;
     try {
@@ -26,11 +28,11 @@ export function createSounds({ createContext, storage } = {}) {
       lastPlayed=now;
       for(const [from,to,delay,duration] of melodies[name]){
         const oscillator=context.createOscillator(), gain=context.createGain();
-        oscillator.type='sine';
+        oscillator.type=waves[name] || 'sine';
         oscillator.frequency.setValueAtTime(from,now+delay);
         oscillator.frequency.exponentialRampToValueAtTime(to,now+delay+duration);
         gain.gain.setValueAtTime(.0001,now+delay);
-        gain.gain.exponentialRampToValueAtTime(.075,now+delay+.008);
+        gain.gain.exponentialRampToValueAtTime(name==='blocked'?.045:.065,now+delay+.008);
         gain.gain.exponentialRampToValueAtTime(.0001,now+delay+duration);
         oscillator.connect(gain);gain.connect(context.destination);
         oscillator.onended=()=>{oscillator.disconnect();gain.disconnect();};
