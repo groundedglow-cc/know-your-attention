@@ -7,7 +7,7 @@ http.createServer(async (req, res) => {
   try {
     let pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
     if (!path.extname(pathname)) pathname = pathname.replace(/\/$/, '') + '/index.html';
-    const file = path.resolve(root, '.' + pathname);
+    const file = path.resolve(root, (pathname.startsWith('/game/') ? './public' : '.') + pathname);
     if (!file.startsWith(root + path.sep) || pathname.includes('/.')) throw Error();
     res.setHeader('Content-Type', types[path.extname(file)] || 'application/octet-stream');
     res.end(await readFile(file));

@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(weread-skills)",
+      "Bash(npx tsc *)",
+      "Bash(git init *)",
+      "Bash(git remote *)",
+      "Bash(git add *)",
+      "Skill(efe:efe-deployer)",
+      "Read(//Users/eleme/Documents/**)",
+      "Read(//Users/eleme/**)",
+      "Bash(awk '/^$/{n++;if\\(n>1\\)print NR\": \"n\" blank lines\";next}{n=0}' /Users/eleme/Documents/know-your-attention/DEPLOY-GUIDE.md)",
+      "Bash(grep -c \"^$\" /Users/eleme/Documents/know-your-attention/DEPLOY-GUIDE.md)",
+      "Bash(awk 'NR==FNR{a[NR]=$0;next}{print}' /Users/eleme/Documents/know-your-attention/DEPLOY-GUIDE.md)",
+      "Bash(lsof -ti:5173 -ti:5174)",
+      "Bash(xargs -r kill -9)",
+      "Bash(pkill -f \"vite\")",
+      "Bash(unset NODE_OPTIONS)",
+      "Bash(npm run *)"
+    ]
+  }
+}

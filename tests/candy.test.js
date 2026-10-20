@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { levels } from '../game/candy/levels.js';
-import { solve, complete, hint, ports, fixed } from '../game/candy/engine.js';
+import { levels } from '../public/game/candy/levels.js';
+import { solve, complete, hint, ports, fixed } from '../public/game/candy/engine.js';
 for(const l of levels) test(`Booklet level ${l.id} is solvable, fills every space and preserves fixed cards`,()=>{
  const solution=solve(l);assert.ok(solution);assert.ok(complete(l,solution));
  assert.equal(solution.filter(Boolean).length,l.size**2-l.stops.length-2);
@@ -21,14 +21,14 @@ test('Rotation, blocked edges, and empty boards',()=>{
 });
 
 test('Start at first unfinished level, even if later levels were completed; all done falls back to first',async()=>{
- const { firstUnfinished }=await import('../game/candy/progress.js');
+ const { firstUnfinished }=await import('../public/game/candy/progress.js');
  assert.equal(firstUnfinished(levels,new Set()),0);
  assert.equal(firstUnfinished(levels,new Set([1,3])),1);
  assert.equal(firstUnfinished(levels,new Set([1,2,3])),3);
  assert.equal(firstUnfinished(levels,new Set([1,2,3,4])),0);
 });
 test('Reset or undo removes completion; restoring a solved board earns it again',async()=>{
- const { syncCompletion,firstUnfinished }=await import('../game/candy/progress.js');
+ const { syncCompletion,firstUnfinished }=await import('../public/game/candy/progress.js');
  const completed=new Set([1,2]);
  syncCompletion(completed,1,false);
  assert.deepEqual([...completed],[2]);assert.equal(firstUnfinished(levels,completed),0);

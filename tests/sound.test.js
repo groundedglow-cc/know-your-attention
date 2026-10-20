@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createSounds } from '../game/candy/sound.js';
+import { createSounds } from '../public/game/candy/sound.js';
 function audioHarness(){
  const events=[];
  const parameter={setValueAtTime(){},exponentialRampToValueAtTime(){}};

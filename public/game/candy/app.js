@@ -61,7 +61,7 @@ function render() {
  $('#rotate').disabled=!selected || isComplete;
  $('#win').hidden=!isComplete;
  $('#next').textContent=levelIndex===levels.length-1?'再玩一次 ↻':'下一关 →';
- if(isComplete&&!won) { say('太棒了！糖果顺利到达，每个管口都接好啦！'); celebrate(); }
+ if(isComplete&&!won) { say('太棒了！糖果顺利到达，每个管口都接好啦！'); celebrate(); sounds.play('success'); }
  won=isComplete; save();
 }
 function renderVisualHint() {
