@@ -51,8 +51,16 @@ export function setupTutorial(dialog,sounds) {
   if(!cancel){const c=document.elementFromPoint(e.clientX,e.clientY)?.closest('[data-learn-cell]');if(c)place(Number(c.dataset.learnCell));else sounds.play('blocked');}
  }
  document.addEventListener('pointerup',e=>finish(e));document.addEventListener('pointercancel',e=>finish(e,true));
- function reset(){step=0;rotation=0;selected=false;lastAnnounced=-1;render();}
- dialog.querySelector('#learn-replay').onclick=reset;
+ function reset(){step=0;rotation=0;selected=false;lastAnnounced=-1;dialog.dataset.audioPrimed='';render();}
+ dialog.querySelector('#learn-replay').onclick=()=>{reset();dialog.dataset.audioPrimed='1';};
+ // The first page can be opened automatically on load, when browsers may still block audio.
+ // Retry the cute cue on the child's first touch inside the guide so the step is never silent.
+ dialog.addEventListener('pointerdown',()=>{
+  if(dialog.dataset.audioPrimed==='1')return;
+  dialog.dataset.audioPrimed='1';
+  sounds.play('guide');
+  sounds.speak('把卡片放进发光的格子');
+ },{passive:true});
  dialog.addEventListener('click',()=>{if(lastAnnounced!==step){render();}});
  dialog.addEventListener('close',()=>{drag=null;card.classList.remove('learn-dragging');card.style.transform='';});
  reset();return {reset};

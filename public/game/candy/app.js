@@ -151,7 +151,7 @@ $('#hint').onclick=()=>{
  say(h.error?`看看发光的 ${pos}：这张卡片需要调整，试试旋转或换一种管道。`:hintStage===1?`先想想发光的 ${pos}：要接住哪两个方向的管口呢？再点提示可以多看一点。`:`${pos} 可以试试${names[h.tile.kind]}，连接${ports(h.tile).map(d=>['上方','右边','下方','左边'][d]).join('和')}。`);
 };
 $('#next').onclick=()=>{if(levelIndex<levels.length-1)switchLevel(levelIndex+1);else $('#reset').click();};
-const guide=$('#guide');const tutorial=setupTutorial(guide,sounds);$('#help').onclick=()=>{tutorial.reset();guide.showModal();};$('#close-guide').onclick=$('#start').onclick=()=>{guide.close();try{localStorage.setItem('candy-guide-seen','1');}catch{}};
+const guide=$('#guide');const tutorial=setupTutorial(guide,sounds);$('#help').onclick=()=>{tutorial.reset();guide.dataset.audioPrimed='1';guide.showModal();};$('#close-guide').onclick=$('#start').onclick=()=>{guide.close();try{localStorage.setItem('candy-guide-seen','1');}catch{}};
 document.addEventListener('keydown',e=>{if(guide.open)return;if(e.key.toLowerCase()==='r')$('#rotate').click();if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();recycle();}if(e.key==='Escape'){selected=null;render();}});
 // Pointer events support mouse, pen and touch with a single interaction model.
 let drag=null, suppressClick=false;

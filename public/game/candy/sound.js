@@ -10,11 +10,12 @@ export function createSounds({ createContext, storage } = {}) {
     blocked:[[320,240,0,.075],[240,205,.08,.075]],
     place:[[560,820,0,.085]],
     success:[[659,659,0,.12],[784,784,.12,.12],[1047,1047,.24,.20]],
-    guide:[[587,880,0,.09],[880,1175,.09,.12]],
-    guideRotate:[[587,880,0,.075],[880,1175,.075,.12]],
+    // Tutorial cues are a tiny, bright two-note chime so each picture step feels friendly.
+    guide:[[523,784,0,.10],[659,988,.10,.14]],
+    guideRotate:[[659,988,0,.09],[784,1175,.09,.13]],
     guideDone:[[659,659,0,.11],[784,784,.11,.11],[1047,1047,.22,.19]],
   };
-  const waves={blocked:'triangle',rotate:'triangle',place:'sine',recycle:'sine',success:'triangle',guide:'triangle',guideRotate:'triangle',guideDone:'triangle'};
+  const waves={blocked:'triangle',rotate:'triangle',place:'sine',recycle:'sine',success:'triangle',guide:'sine',guideRotate:'sine',guideDone:'triangle'};
   async function play(name) {
     if(!enabled||!melodies[name])return;
     try {
