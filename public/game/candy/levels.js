@@ -1,5 +1,5 @@
 // Directions: 0 up, 1 right, 2 down, 3 left. Indices are row-major, zero-based.
-import { bookletLayouts } from './booklet-layouts.js';
+import { bookletLayouts } from './booklet-layouts.js?v=5d2b75a';
 
 // Transcribed from supplied booklet, page 5. The later booklet pages use
 // several decorative machine pieces; until their colour/multi-endpoint rules

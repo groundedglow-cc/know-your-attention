@@ -1,4 +1,4 @@
-import { levels } from './levels.js';
+import { levels } from './levels.js?v=5d2b75a';
 import { names, kinds, limits, fixed, complete, hint, ports } from './engine.js';
 import { art } from './art.js';
 import { buddy, basket } from './characters.js';
