@@ -1,0 +1,4 @@
+{
+  "name": "know-your-attention", "private": true, "type": "module",
+  "scripts": { "dev": "node scripts/serve.mjs", "test": "node --test", "build": "node scripts/build.mjs" }
+}
