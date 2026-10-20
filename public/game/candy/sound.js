@@ -9,6 +9,9 @@ export function createSounds({ createContext, storage } = {}) {
     blocked:[[240,190,0,.09],[190,160,.11,.09]],
     place:[[500,690,0,.08]],
     success:[[523,523,0,.14],[659,659,.14,.14],[784,784,.28,.22]],
+    guide:[[520,720,0,.10],[720,920,.10,.13]],
+    guideRotate:[[520,780,0,.08],[780,1040,.08,.13]],
+    guideDone:[[523,523,0,.12],[659,659,.12,.12],[784,784,.24,.20]],
   };
   async function play(name) {
     if(!enabled||!melodies[name])return;
@@ -37,6 +40,18 @@ export function createSounds({ createContext, storage } = {}) {
   }
   return {
     play,
+    speak(text) {
+      if (!enabled || !text || typeof globalThis.speechSynthesis === 'undefined' || typeof globalThis.SpeechSynthesisUtterance === 'undefined') return;
+      try {
+        globalThis.speechSynthesis.cancel();
+        const utterance = new globalThis.SpeechSynthesisUtterance(text);
+        utterance.lang = 'zh-CN';
+        utterance.rate = .82;
+        utterance.pitch = 1.12;
+        utterance.volume = .82;
+        globalThis.speechSynthesis.speak(utterance);
+      } catch { /* Speech is an enhancement; it must never block the game. */ }
+    },
     get enabled(){return enabled;},
     toggle(){
       enabled=!enabled;

@@ -1,6 +1,6 @@
 import { art } from './art.js';
 export function setupTutorial(dialog,sounds) {
- let step=0,rotation=0,selected=false,drag=null,ignoreUntil=0;
+ let step=0,rotation=0,selected=false,drag=null,ignoreUntil=0,lastAnnounced=-1;
  const board=dialog.querySelector('#learn-board'),card=dialog.querySelector('#learn-card');
  function render(){
   const target=step===0||step===1?4:7;
@@ -18,6 +18,12 @@ export function setupTutorial(dialog,sounds) {
   dialog.querySelector('#learn-cue').textContent=step===0||step===2?'🧩 ↑ 👆':step===1?'👆 ↻':'🍬 ➜ 😋';
   dialog.querySelector('#start').hidden=step!==3;
   dialog.querySelector('#learn-replay').hidden=step!==3;
+  if (lastAnnounced !== step) {
+   lastAnnounced = step;
+   const words = ['把卡片放进发光的格子', '点一下卡片，让管道转一转', '再放一块管道，接到小朋友', '糖果送到啦，你学会了'];
+   sounds.play(step===3?'guideDone':step===1?'guideRotate':'guide');
+   sounds.speak(words[step]);
+  }
  }
  function place(i){
   if((step===0&&i===4)||(step===2&&i===7)){step=step===0?1:3;selected=false;sounds.play(step===3?'success':'place');render();}
@@ -45,8 +51,9 @@ export function setupTutorial(dialog,sounds) {
   if(!cancel){const c=document.elementFromPoint(e.clientX,e.clientY)?.closest('[data-learn-cell]');if(c)place(Number(c.dataset.learnCell));else sounds.play('blocked');}
  }
  document.addEventListener('pointerup',e=>finish(e));document.addEventListener('pointercancel',e=>finish(e,true));
- function reset(){step=0;rotation=0;selected=false;render();}
+ function reset(){step=0;rotation=0;selected=false;lastAnnounced=-1;render();}
  dialog.querySelector('#learn-replay').onclick=reset;
+ dialog.addEventListener('click',()=>{if(lastAnnounced!==step){render();}});
  dialog.addEventListener('close',()=>{drag=null;card.classList.remove('learn-dragging');card.style.transform='';});
  reset();return {reset};
 }
