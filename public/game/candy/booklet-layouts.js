@@ -8,6 +8,10 @@ const merge = (...parts) => Object.assign({}, ...parts);
 const item = (type, direction) => direction === undefined ? { type } : { type, direction };
 
 export const bookletLayouts = [
+ q(5,3,merge({0:item('child')},{3:item('blueJar')},{4:item('stop')}),'IMG_3719.HEIC'),
+ q(6,3,merge({4:item('blueJar')},{6:item('child')}),'IMG_3719.HEIC'),
+ q(7,3,merge({0:item('child')},{2:item('blueJar')},{4:item('prefilledCross',0)},{8:item('stop')}),'IMG_3719.HEIC'),
+ q(8,3,merge({0:item('lion')},{6:item('yellowJar')}),'IMG_3719.HEIC'),
  q(9,3,merge({2:item('lion')},{4:item('prefilledCross',0)},{6:item('stop')},{8:item('yellowJar')}),'IMG_3708.HEIC'),
  q(10,3,merge({0:item('child')},{3:item('lion')},{4:item('stop')},{6:item('yellowJar')},{8:item('blueJar')}),'IMG_3708.HEIC'),
  q(11,3,merge({0:item('lion')},{2:item('child')},{4:item('prefilledCorner',1)},{6:item('yellowJar')},{8:item('blueJar')}),'IMG_3708.HEIC'),
