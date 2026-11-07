@@ -1,43 +1,45 @@
-// Directions: 0 up, 1 right, 2 down, 3 left. Indices are row-major, zero-based.
-import { bookletLayouts } from './booklet-layouts.js?v=5-8';
-
-// Transcribed from supplied booklet, page 5. The later booklet pages use
-// several decorative machine pieces; until their colour/multi-endpoint rules
-// are modelled, their STOP positions become fixed obstacles and the route is
-// presented as the same playable pipe puzzle.
+// Candy booklet transcribed from the question + answer pages.
+// Shared squares (both belts through one cell) use kind "shared" (overpass) or
+// "shared-corner" (double-bend) with a rotation; single-colour tiles carry a color.
+// The character feeds the candy (start); the gumball machine receives it (end).
 export const levels = [
-  { id: 1, name: '第一次送糖', size: 3, stops: [0, 1, 2, 5, 6], start: { index: 3, direction: 1 }, end: { index: 8, direction: 3 } },
-  { id: 2, name: '拐个弯就到', size: 3, stops: [0, 1, 3, 8], start: { index: 2, direction: 2 }, end: { index: 6, direction: 1 } },
-  { id: 3, name: '向上出发吧', size: 3, stops: [0, 3, 5, 8], start: { index: 6, direction: 1 }, end: { index: 2, direction: 3 } },
-  { id: 4, name: '甜蜜绕远路', size: 3, stops: [3, 6], start: { index: 2, direction: 2 }, end: { index: 0, direction: 1 } },
-  ...bookletLayouts.map(layout => {
-    const count = layout.size ** 2;
-    // Keep a verified subset of photographed STOP positions so every imported
-    // page remains solvable with the current pipe inventory.
-    const safeStops = {
-      5: [4],
-      13: [9], 15: [3], 16: [9], 17: [4], 20: [4], 21: [4],
-      22: [12], 23: [12], 25: [12], 27: [4], 28: [8, 13, 16],
-      30: [7, 12, 20], 36: [2, 12], 39: [3, 4],
-    };
-    const stops = safeStops[layout.id] || [];
-    const endpoints = {
-      5: { start: { index: 3, direction: 2 }, end: { index: 0, direction: 1 } },
-      6: { start: { index: 4, direction: 3 }, end: { index: 6, direction: 1 } },
-      7: { start: { index: 2, direction: 2 }, end: { index: 0, direction: 1 } },
-      8: { start: { index: 6, direction: 1 }, end: { index: 0, direction: 2 } },
-    };
-    const endpoint = endpoints[layout.id] || { start: { index: 0, direction: 1 }, end: { index: count - 1, direction: 3 } };
-    const start = endpoint.start.index;
-    const end = endpoint.end.index;
-    return {
-      id: layout.id,
-      name: `册子第 ${layout.id} 题`,
-      size: layout.size,
-      stops: stops.filter(index => index !== start && index !== end),
-      start: endpoint.start,
-      end: endpoint.end,
-      bookletFixed: layout.fixed,
-    };
-  }),
+ {id:1,name:'第一次送糖',size:3,stops:[0,1,2,5,6],belts:[{color:'blue',start:{index:8,direction:3},end:{index:3,direction:1}}],given:{},palette:{'blue-corner':2}},
+ {id:2,name:'拐个弯就到',size:3,stops:[0,1,3,8],belts:[{color:'blue',start:{index:6,direction:1},end:{index:2,direction:2}}],given:{},palette:{'blue-corner':3}},
+ {id:3,name:'向上出发吧',size:3,stops:[0,3,5,8],belts:[{color:'blue',start:{index:2,direction:3},end:{index:6,direction:1}}],given:{},palette:{'blue-corner':2,'blue-straight':1}},
+ {id:4,name:'甜蜜绕远路',size:3,stops:[3,6],belts:[{color:'blue',start:{index:0,direction:1},end:{index:2,direction:2}}],given:{},palette:{'blue-corner':3,'blue-straight':2}},
+ {id:5,name:'册子第 5 题',size:3,stops:[4],belts:[{color:'blue',start:{index:0,direction:1},end:{index:3,direction:2}}],given:{},palette:{'blue-straight':3,'blue-corner':3}},
+ {id:6,name:'册子第 6 题',size:3,stops:[],belts:[{color:'blue',start:{index:6,direction:1},end:{index:4,direction:3}}],given:{},palette:{'blue-corner':4,'blue-straight':3}},
+ {id:7,name:'册子第 7 题',size:3,stops:[8],belts:[{color:'blue',start:{index:0,direction:1},end:{index:2,direction:2}}],given:{4:{kind:'cross',color:'blue',rotation:0}},palette:{'blue-corner':5}},
+ {id:8,name:'册子第 8 题',size:3,stops:[],belts:[{color:'yellow',start:{index:0,direction:2},end:{index:6,direction:1}}],given:{},palette:{'yellow-corner':5,'yellow-straight':2}},
+ {id:9,name:'册子第 9 题',size:3,stops:[6],belts:[{color:'yellow',start:{index:2,direction:2},end:{index:8,direction:3}}],given:{4:{kind:'cross',color:'yellow',rotation:0}},palette:{'yellow-corner':5}},
+ {id:10,name:'册子第 10 题',size:3,stops:[4],belts:[{color:'blue',start:{index:0,direction:1},end:{index:8,direction:0}},{color:'yellow',start:{index:3,direction:2},end:{index:7,direction:3}}],given:{},palette:{'blue-straight':2,'blue-corner':1,'yellow-corner':1}},
+ {id:11,name:'册子第 11 题',size:3,stops:[],belts:[{color:'blue',start:{index:2,direction:2},end:{index:8,direction:3}},{color:'yellow',start:{index:0,direction:1},end:{index:6,direction:0}}],given:{4:{kind:'shared-corner',rotation:1}},palette:{'yellow-corner':2,'blue-corner':2}},
+ {id:12,name:'册子第 12 题',size:3,stops:[2],belts:[{color:'blue',start:{index:1,direction:2},end:{index:6,direction:1}},{color:'yellow',start:{index:0,direction:2},end:{index:8,direction:0}}],given:{4:{kind:'shared',rotation:0}},palette:{'yellow-corner':2,'blue-corner':1}},
+ {id:13,name:'册子第 13 题',size:4,stops:[9],belts:[{color:'blue',start:{index:0,direction:1},end:{index:10,direction:1}}],given:{},palette:{'blue-straight':7,'blue-corner':6}},
+ {id:14,name:'册子第 14 题',size:4,stops:[],belts:[{color:'blue',start:{index:2,direction:2},end:{index:3,direction:2}}],given:{},palette:{'blue-corner':6,'blue-straight':8}},
+ {id:15,name:'册子第 15 题',size:4,stops:[3,5],belts:[{color:'blue',start:{index:7,direction:3},end:{index:11,direction:2}}],given:{},palette:{'blue-corner':9,'blue-straight':3}},
+ {id:16,name:'册子第 16 题',size:4,stops:[9,10],belts:[{color:'blue',start:{index:0,direction:1},end:{index:11,direction:2}}],given:{},palette:{'blue-straight':7,'blue-corner':5}},
+ {id:17,name:'册子第 17 题',size:4,stops:[0,4],belts:[{color:'yellow',start:{index:5,direction:1},end:{index:1,direction:1}}],given:{},palette:{'yellow-straight':6,'yellow-corner':6}},
+ {id:18,name:'册子第 18 题',size:4,stops:[2,4,6],belts:[{color:'blue',start:{index:0,direction:1},end:{index:15,direction:3}},{color:'yellow',start:{index:3,direction:2},end:{index:12,direction:0}}],given:{9:{kind:'shared',rotation:0}},palette:{'blue-corner':2,'blue-straight':2,'yellow-straight':2,'yellow-corner':2}},
+ {id:19,name:'册子第 19 题',size:4,stops:[2,15],belts:[{color:'blue',start:{index:0,direction:1},end:{index:4,direction:2}},{color:'yellow',start:{index:3,direction:2},end:{index:12,direction:1}}],given:{10:{kind:'shared-corner',rotation:3}},palette:{'blue-corner':4,'yellow-straight':2,'blue-straight':1,'yellow-corner':2}},
+ {id:20,name:'册子第 20 题',size:4,stops:[4,8],belts:[{color:'blue',start:{index:0,direction:1},end:{index:12,direction:1}}],given:{10:{kind:'cross',color:'blue',rotation:0}},palette:{'blue-corner':10,'blue-cross':1}},
+ {id:21,name:'册子第 21 题',size:4,stops:[0,4],belts:[{color:'yellow',start:{index:1,direction:2},end:{index:2,direction:1}}],given:{9:{kind:'cross',color:'yellow',rotation:0},10:{kind:'cross',color:'yellow',rotation:0}},palette:{'yellow-corner':9,'yellow-straight':1}},
+ {id:22,name:'册子第 22 题',size:4,stops:[12],belts:[{color:'blue',start:{index:0,direction:1},end:{index:4,direction:2}},{color:'yellow',start:{index:3,direction:2},end:{index:15,direction:0}}],given:{6:{kind:'shared-corner',rotation:3},9:{kind:'shared-corner',rotation:3},10:{kind:'cross',color:'yellow',rotation:0}},palette:{'blue-straight':1,'blue-corner':3,'yellow-corner':4}},
+ {id:23,name:'册子第 23 题',size:4,stops:[12,15],belts:[{color:'blue',start:{index:1,direction:1},end:{index:11,direction:3}},{color:'yellow',start:{index:0,direction:2},end:{index:3,direction:2}}],given:{6:{kind:'shared-corner',rotation:3},9:{kind:'shared-corner',rotation:0},10:{kind:'shared',rotation:1}},palette:{'blue-corner':2,'yellow-straight':1,'yellow-corner':4}},
+ {id:24,name:'册子第 24 题',size:4,stops:[],belts:[{color:'blue',start:{index:3,direction:3},end:{index:1,direction:2}},{color:'yellow',start:{index:0,direction:2},end:{index:12,direction:0}}],given:{5:{kind:'shared',rotation:0},6:{kind:'shared-corner',rotation:0},9:{kind:'shared',rotation:0}},palette:{'blue-corner':4,'yellow-corner':3,'blue-straight':2}},
+ {id:25,name:'册子第 25 题',size:4,stops:[12],belts:[{color:'blue',start:{index:0,direction:1},end:{index:4,direction:2}},{color:'yellow',start:{index:3,direction:2},end:{index:11,direction:2}}],given:{6:{kind:'shared-corner',rotation:3},9:{kind:'shared-corner',rotation:3}},palette:{'blue-straight':1,'blue-corner':3,'yellow-corner':4,'yellow-straight':1}},
+ {id:26,name:'册子第 26 题',size:4,stops:[15],belts:[{color:'blue',start:{index:12,direction:1},end:{index:0,direction:1}},{color:'yellow',start:{index:3,direction:3},end:{index:8,direction:0}}],given:{6:{kind:'shared-corner',rotation:1},10:{kind:'cross',color:'blue',rotation:0}},palette:{'blue-corner':5,'yellow-corner':2,'shared':1,'blue-straight':1}},
+ {id:27,name:'册子第 27 题',size:5,stops:[4,13,18],belts:[{color:'blue',start:{index:0,direction:1},end:{index:17,direction:3}}],given:{},palette:{'blue-straight':10,'blue-corner':10}},
+ {id:28,name:'册子第 28 题',size:5,stops:[8,13,16,17,18],belts:[{color:'yellow',start:{index:3,direction:1},end:{index:0,direction:2}}],given:{},palette:{'yellow-corner':9,'yellow-straight':9}},
+ {id:29,name:'册子第 29 题',size:5,stops:[0,13,14,16],belts:[{color:'blue',start:{index:5,direction:1},end:{index:11,direction:3}}],given:{},palette:{'blue-corner':10,'blue-straight':9}},
+ {id:30,name:'册子第 30 题',size:5,stops:[7,12,20],belts:[{color:'blue',start:{index:17,direction:2},end:{index:11,direction:0}},{color:'yellow',start:{index:2,direction:1},end:{index:4,direction:2}}],given:{},palette:{'blue-corner':6,'yellow-corner':3,'blue-straight':3,'yellow-straight':6}},
+ {id:31,name:'册子第 31 题',size:5,stops:[1,6],belts:[{color:'blue',start:{index:22,direction:1},end:{index:18,direction:3}},{color:'yellow',start:{index:0,direction:2},end:{index:2,direction:2}}],given:{12:{kind:'shared-corner',rotation:1}},palette:{'blue-corner':5,'yellow-straight':5,'blue-straight':5,'yellow-corner':3}},
+ {id:32,name:'册子第 32 题',size:5,stops:[14],belts:[{color:'blue',start:{index:0,direction:2},end:{index:2,direction:1}},{color:'yellow',start:{index:20,direction:1},end:{index:1,direction:2}}],given:{12:{kind:'shared',rotation:0}},palette:{'blue-straight':5,'blue-corner':5,'yellow-straight':4,'yellow-corner':5}},
+ {id:33,name:'册子第 33 题',size:5,stops:[10,19,22,23,24],belts:[{color:'blue',start:{index:0,direction:1},end:{index:5,direction:1}}],given:{13:{kind:'cross',color:'blue',rotation:0},16:{kind:'cross',color:'blue',rotation:0}},palette:{'blue-straight':6,'blue-corner':10}},
+ {id:34,name:'册子第 34 题',size:5,stops:[0,1,16,24],belts:[{color:'yellow',start:{index:5,direction:1},end:{index:9,direction:0}}],given:{7:{kind:'cross',color:'yellow',rotation:0},12:{kind:'cross',color:'yellow',rotation:0},13:{kind:'cross',color:'yellow',rotation:0},18:{kind:'cross',color:'yellow',rotation:0}},palette:{'yellow-corner':9,'yellow-straight':6}},
+ {id:35,name:'册子第 35 题',size:5,stops:[10,15],belts:[{color:'blue',start:{index:2,direction:1},end:{index:20,direction:1}},{color:'yellow',start:{index:19,direction:2},end:{index:16,direction:0}}],given:{6:{kind:'cross',color:'yellow',rotation:0},13:{kind:'shared',rotation:1}},palette:{'yellow-corner':6,'blue-straight':4,'blue-corner':4,'yellow-straight':3}},
+ {id:36,name:'册子第 36 题',size:5,stops:[2,12,24],belts:[{color:'blue',start:{index:16,direction:1},end:{index:7,direction:3}}],given:{6:{kind:'cross',color:'blue',rotation:0},18:{kind:'cross',color:'blue',rotation:0}},palette:{'blue-corner':10,'blue-straight':8}},
+ {id:37,name:'册子第 37 题',size:5,stops:[9],belts:[{color:'blue',start:{index:10,direction:2},end:{index:16,direction:0}},{color:'yellow',start:{index:4,direction:3},end:{index:14,direction:3}}],given:{},palette:{'blue-corner':8,'blue-straight':9,'yellow-corner':2,'yellow-straight':1}},
+ {id:38,name:'册子第 38 题',size:5,stops:[5],belts:[{color:'blue',start:{index:0,direction:1},end:{index:20,direction:1}},{color:'yellow',start:{index:10,direction:2},end:{index:6,direction:2}}],given:{},palette:{'blue-straight':9,'blue-corner':8,'yellow-straight':1,'yellow-corner':2}},
+ {id:39,name:'册子第 39 题',size:5,stops:[0,3,4,15,24],belts:[{color:'blue',start:{index:20,direction:1},end:{index:9,direction:3}}],given:{6:{kind:'cross',color:'blue',rotation:0},7:{kind:'cross',color:'blue',rotation:0},11:{kind:'cross',color:'blue',rotation:0},18:{kind:'cross',color:'blue',rotation:0}},palette:{'blue-corner':10,'blue-straight':4}},
 ];
