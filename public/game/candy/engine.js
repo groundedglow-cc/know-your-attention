@@ -211,10 +211,13 @@ export function hint(level, board) {
     const i = solution.findIndex((t, i) => t && !board[i]);
     return i < 0 ? null : { index: i, tile: solution[i], error: false };
   }
+  // A placed tile that contradicts the reference answer is the clearest signal;
+  // fall back to "removing this tile makes the board solvable" only if none differ.
+  const mismatch = board.findIndex((t, i) => t && answer[i] && (t.kind !== answer[i].kind || t.color !== answer[i].color || ports(t).join() !== ports(answer[i]).join()));
+  if (mismatch >= 0) return { index: mismatch, error: true };
   for (let i = 0; i < board.length; i++) if (board[i]) {
     const copy = [...board]; copy[i] = null;
     if (solve(level, copy, limits)) return { index: i, error: true };
   }
-  const i = board.findIndex((t, i) => t && answer[i] && (t.kind !== answer[i].kind || t.color !== answer[i].color || ports(t).join() !== ports(answer[i]).join()));
-  return i < 0 ? null : { index: i, error: true };
+  return null;
 }

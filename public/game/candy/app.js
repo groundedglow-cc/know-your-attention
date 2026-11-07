@@ -1,5 +1,5 @@
 import { levels } from './levels.js?v=40';
-import { pieceName, ports, fixed, isStop, complete, hint } from './engine.js?v=40';
+import { pieceName, ports, fixed, isStop, complete, hint } from './engine.js?v=43';
 import { art } from './art.js?v=40';
 import { buddy, basket } from './characters.js?v=40';
 import { setupTutorial } from './tutorial.js?v=40';
@@ -17,7 +17,7 @@ document.addEventListener('contextmenu', e => e.preventDefault());
 $('#hint-buddy').innerHTML = buddy;
 $('#basket-art').innerHTML = basket;
 
-const storageKey = document.body.dataset.storageKey || 'candy-workshop-v1';
+const storageKey = document.body.dataset.storageKey || 'candy-workshop-v2';
 let saved; try { saved = JSON.parse(localStorage.getItem(storageKey)); } catch {}
 let levelIndex;
 let board, selected = null, history = [], hintCell = -1, hintStage = 0, visualHint = null, won = false;
@@ -147,8 +147,9 @@ function renderVisualHint() {
   if (!h.error && hintStage > 1) $('#palette').querySelector(`[data-piece="${h.tile.color}-${h.tile.kind}"]`)?.classList.add('suggested');
 }
 function place(source, index) {
-  if (won || fixed(level(), index)) { blocked('这是题目固定的卡片，换一个空格试试吧。'); return; }
-  if (board[index]) { blocked('这里已经有卡片了，可以先旋转它，或移到回收站。'); return; }
+  if (won) { blocked('这一关已经通关啦！'); return; }
+  if (fixed(level(), index)) { blocked('起点、终点和 STOP 都是固定的，换一个空格试试吧。'); return; }
+  if (board[index]) { blocked('这里已经有卡片了，点一下它旋转，或拖到回收站。'); return; }
   if (source.index === undefined && remaining(source.color, source.kind) <= 0) { blocked('这种卡片用完啦。'); return; }
   snapshot();
   board[index] = { kind: source.kind, color: source.color, rotation: source.rotation };
