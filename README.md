@@ -124,6 +124,28 @@ npm run dev
 http://localhost:5173
 ```
 
+### 小游戏：翻翻找朋友
+
+开发服务器启动后访问 [http://localhost:5173/game/memory/](http://localhost:5173/game/memory/)。这是独立的静态小游戏页面，也可用下面的轻量静态服务器直接预览：
+
+```bash
+npm run dev:candy
+```
+
+游戏说明、素材来源和验收要点分别在 `docs/memory-match-prd.md`、`docs/memory-match-assets.md` 与 `tests/memory.test.js`。
+
+如需重新生成内置日语读音，设置 `AZURE_SPEECH_KEY` 与 `AZURE_SPEECH_REGION` 后运行：
+
+```bash
+node scripts/generate-memory-audio.mjs
+```
+
+使用同一套 OSS 环境变量后，可上传或校验已上传的音频：
+
+```bash
+node scripts/upload-memory-audio-to-oss.mjs
+```
+
 ### 推荐体验方式
 
 - 使用 Chrome / Edge 等现代浏览器

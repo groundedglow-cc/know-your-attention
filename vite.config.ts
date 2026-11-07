@@ -14,7 +14,7 @@ export default defineConfig({
           if (!req.url) return next();
 
           const url = new URL(req.url, 'http://vite.local');
-          for (const game of ['candy', 'tictactoe']) {
+          for (const game of ['candy', 'tictactoe', 'memory']) {
             if (url.pathname === `/game/${game}` || url.pathname === `/game/${game}/`) {
               req.url = `/game/${game}/index.html${url.search}`;
             }
