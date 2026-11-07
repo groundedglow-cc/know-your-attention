@@ -1,0 +1,202 @@
+:root {
+  --bg: #faf7ef;
+  --ink: #354d45;
+  --muted: #708279;
+  --card: #ffffff;
+  --shadow: 0 12px 32px rgba(53, 77, 69, 0.1);
+  --orange: #f6a75c;
+  --orange-dark: #c96f3a;
+  --blue: #7ea8cf;
+  --blue-dark: #4a6f96;
+  --line: #e8894f;
+  --soft-edge: #ece5d4;
+  --soft-edge-shadow: #e6e0d0;
+}
+
+* { box-sizing: border-box; }
+/* `.screen` sets display:flex, which would otherwise override the browser's
+   default `[hidden] { display:none }`. Restore it so screen switching works. */
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+
+.screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 首页 */
+.home { align-items: center; padding: 24px; }
+.home-header { width: 100%; max-width: 560px; display: flex; align-items: center; }
+.brand { color: var(--muted); text-decoration: none; font-weight: 600; }
+.home-main {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 14px; width: 100%; max-width: 560px; text-align: center;
+}
+.home h1 { font-size: 2.2rem; margin: 0; }
+.tagline { color: var(--muted); margin: 0; }
+.hero { display: flex; align-items: center; gap: 20px; margin: 6px 0; }
+.hero-piece { width: 96px; height: 96px; }
+.hero-piece svg { width: 100%; height: 100%; }
+.hero-vs { font-weight: 800; color: var(--muted); font-size: 1.3rem; }
+.home-actions { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 360px; margin-top: 6px; }
+.link {
+  background: none; border: none; color: var(--muted);
+  text-decoration: underline; font-size: 0.95rem; min-height: 44px;
+}
+
+/* 按钮 */
+.primary, .secondary, .quiet, .big {
+  min-height: 56px; border-radius: 18px; border: none;
+  font-weight: 700; font-size: 1.15rem; padding: 12px 24px;
+}
+.big { width: 100%; }
+.primary { background: var(--orange); color: #fff; box-shadow: 0 8px 0 var(--orange-dark); }
+.primary:active { transform: translateY(4px); box-shadow: 0 4px 0 var(--orange-dark); }
+.secondary { background: #fff; color: var(--ink); box-shadow: 0 8px 0 var(--soft-edge-shadow); }
+.secondary:active { transform: translateY(4px); box-shadow: 0 4px 0 var(--soft-edge-shadow); }
+.quiet { background: transparent; color: var(--muted); min-height: 44px; font-size: 1rem; }
+
+button:focus-visible, .cell:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* 对局页 */
+.game {
+  padding: max(12px, env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
+  gap: 12px;
+  align-items: stretch;
+}
+.game-header { display: flex; justify-content: space-between; align-items: center; }
+#back, #sound-toggle {
+  min-height: 48px; min-width: 56px; background: #fff;
+  border-radius: 14px; box-shadow: 0 4px 0 var(--soft-edge-shadow);
+}
+
+.turn { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.avatar {
+  width: 56px; height: 56px; border-radius: 50%; background: #fff;
+  display: grid; place-items: center; overflow: hidden;
+}
+.avatar svg { width: 84%; height: 84%; }
+#turn-text { font-size: 1.25rem; font-weight: 700; }
+
+/* 棋盘 */
+.board-wrap { position: relative; width: 100%; max-width: 460px; margin: 0 auto; }
+.board {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 100%;
+  -webkit-user-select: none; user-select: none;
+}
+.cell {
+  aspect-ratio: 1;
+  border: none; border-radius: 22px;
+  background: #fff;
+  box-shadow: inset 0 -4px 0 var(--soft-edge), 0 4px 0 var(--soft-edge-shadow);
+  display: grid; place-items: center; padding: 11%;
+  touch-action: manipulation;
+  min-height: 0;
+}
+.cell svg { width: 100%; height: 100%; }
+.cell.pressed { transform: scale(0.96); background: #fff6e8; }
+.cell.filled { cursor: default; }
+
+/* 提示光圈 */
+.cell.hint-halo {
+  box-shadow: 0 0 0 5px var(--orange), 0 0 22px 6px rgba(246, 167, 92, 0.55);
+}
+
+/* 胜利连线与纸屑 */
+.win-line { position: absolute; left: 0; top: 0; pointer-events: none; z-index: 3; }
+.win-line line { stroke: var(--line); stroke-width: 10; stroke-linecap: round; opacity: 0.9; }
+.confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 4; }
+.star { position: absolute; border-radius: 2px; }
+
+/* 结果 */
+.result { text-align: center; margin-top: 4px; }
+#result-text { display: block; font-size: 1.5rem; font-weight: 800; color: var(--orange-dark); margin-bottom: 12px; }
+.result-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.result-actions .primary, .result-actions .secondary { min-width: 140px; }
+
+.hint {
+  align-self: center; background: #fff; border-radius: 16px;
+  box-shadow: 0 4px 0 var(--soft-edge-shadow); min-height: 52px;
+  min-width: 128px; font-weight: 700;
+}
+.hint:disabled { opacity: 0.5; }
+
+/* 对话框 */
+.dialog { border: none; border-radius: 24px; padding: 24px; max-width: 90vw; box-shadow: var(--shadow); }
+.dialog::backdrop { background: rgba(53, 77, 69, 0.35); }
+.dialog h2 { margin-top: 0; }
+.dialog p { margin: 0 0 8px; }
+.dialog-actions { display: flex; gap: 12px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+.dialog-actions .primary, .dialog-actions .secondary { min-width: 120px; }
+
+#settings fieldset { border: none; padding: 0; margin: 0 0 16px; }
+#settings legend { font-weight: 700; margin-bottom: 8px; }
+#settings label { display: flex; align-items: center; gap: 8px; min-height: 48px; }
+#settings .primary, #settings .secondary { display: block; width: 100%; margin-top: 8px; }
+
+/* 教学 */
+.tutorial { text-align: center; }
+#tutorial-message { font-size: 1.3rem; font-weight: 700; margin: 8px 0 16px; }
+.tutorial-board-wrap { position: relative; width: min(72vw, 240px); margin: 0 auto; }
+.tutorial-board { width: 100%; gap: 8px; }
+.tutorial-board .cell { border-radius: 16px; }
+.tutorial-actions { margin-top: 16px; display: flex; justify-content: center; gap: 12px; }
+
+/* 动画（尊重 prefers-reduced-motion） */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes drop {
+    0% { transform: scale(0.6); }
+    60% { transform: scale(1.08); }
+    100% { transform: scale(1); }
+  }
+  .cell.drop { animation: drop 0.22s ease-out; }
+
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+  }
+  .avatar { animation: breathe 2.4s ease-in-out infinite; }
+
+  @keyframes think {
+    0%, 100% { transform: rotate(-4deg); }
+    50% { transform: rotate(4deg); }
+  }
+  .avatar.thinking { animation: think 0.9s ease-in-out infinite; }
+
+  @keyframes winPulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(246, 167, 92, 0.6); }
+    70% { transform: scale(1.07); box-shadow: 0 0 0 14px rgba(246, 167, 92, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(246, 167, 92, 0); }
+  }
+  .cell.win-cell { animation: winPulse 0.6s ease-out both; }
+
+  @keyframes fall {
+    0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+    100% { transform: translateY(240px) rotate(360deg) scale(0.6); opacity: 0; }
+  }
+  .star { animation: fall linear forwards; }
+}
+
+/* 胜利格高亮（无动画也有静态底色） */
+.cell.win-cell { background: #fff4d6; box-shadow: 0 0 0 3px var(--line); }
+
+/* 短屏 / 横屏：收缩棋盘，保留滚动而非裁切按钮 */
+@media (orientation: landscape) and (max-height: 520px) {
+  .board-wrap { max-width: min(420px, calc(100vh - 170px)); }
+  .game { gap: 8px; }
+  .turn { margin: 0; }
+}
