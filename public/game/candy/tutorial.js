@@ -1,4 +1,4 @@
-import { art } from './art.js?v=39';
+import { art } from './art.js?v=40';
 export function setupTutorial(dialog,sounds) {
  let step=0,rotation=0,selected=false,drag=null,ignoreUntil=0,lastAnnounced=-1;
  const board=dialog.querySelector('#learn-board'),card=dialog.querySelector('#learn-card');

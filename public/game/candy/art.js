@@ -1,4 +1,4 @@
-import { ports, tileOpenings } from './engine.js';
+import { ports, tileOpenings } from './engine.js?v=40';
 
 const PIPE = { blue: '#409ca3', yellow: '#e6a23c' };
 // Border colour for each belt; the yellow border is reddish to contrast with the yellow fill.

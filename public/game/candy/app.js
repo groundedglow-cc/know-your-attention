@@ -1,10 +1,10 @@
-import { levels } from './levels.js?v=39';
-import { pieceName, ports, fixed, isStop, complete, hint } from './engine.js?v=39';
-import { art } from './art.js?v=39';
-import { buddy, basket } from './characters.js?v=39';
-import { setupTutorial } from './tutorial.js?v=39';
-import { createSounds } from './sound.js?v=39';
-import { firstUnfinished, syncCompletion } from './progress.js?v=39';
+import { levels } from './levels.js?v=40';
+import { pieceName, ports, fixed, isStop, complete, hint } from './engine.js?v=40';
+import { art } from './art.js?v=40';
+import { buddy, basket } from './characters.js?v=40';
+import { setupTutorial } from './tutorial.js?v=40';
+import { createSounds } from './sound.js?v=40';
+import { firstUnfinished, syncCompletion } from './progress.js?v=40';
 const $ = s => document.querySelector(s);
 let soundStorage; try { soundStorage = localStorage; } catch {}
 const sounds = createSounds({ storage: soundStorage, createContext: () => new (window.AudioContext || window.webkitAudioContext)() });
