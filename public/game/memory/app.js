@@ -1,6 +1,6 @@
-import { builtInThemes } from './cards.js';
-import { DIFFICULTIES, createDeck, canFlip, compare } from './engine.js';
-import { createSounds } from './sound.js';
+import { builtInThemes } from './cards.js?v=3';
+import { DIFFICULTIES, createDeck, canFlip, compare } from './engine.js?v=3';
+import { createSounds } from './sound.js?v=3';
 const $ = s => document.querySelector(s);
 const storageKey = 'memory-match-settings-v1';
 let prefs = { theme: 'animals', difficulty: 'easy', delay: 1800, language: 'ja' };
@@ -22,11 +22,28 @@ function currentTheme() { return themes[prefs.theme] || themes.animals; }
 function clearTimer() { clearTimeout(timer); timer = 0; dueAt = 0; pausedLeft = 0; }
 function cardLabel(card, index) { const ordinal = `第 ${index + 1} 张卡片`, word = prefs.language === 'en' ? card.image.english : card.image.japanese; return card.state === 'down' ? `${ordinal}，未翻开` : `${ordinal}，${card.image.name}${word ? `，${prefs.language === 'en' ? '英文' : '日语'} ${word}` : ''}${card.state === 'matched' ? '，已配对' : ''}`; }
 function cols(count) { return count === 6 ? 3 : count === 8 ? 2 : 3; }
+function fitBoardToViewport() {
+  const board = $('#board');
+  if (!board || window.innerWidth < 600 || !deck.length) { if (board) board.style.width = ''; return; }
+  // Keep every card visible on iPad: solve the grid height from the actual
+  // header, status and action heights instead of guessing a fixed viewport %.
+  const wideColumns = deck.length === 8 || deck.length === 12 ? 4 : 3;
+  const rows = Math.ceil(deck.length / wideColumns);
+  const gap = Number.parseFloat(getComputedStyle(board).gap) || 18;
+  const cardRatio = 1.12;
+  const viewport = window.visualViewport?.height || window.innerHeight;
+  const reserved = $('header').offsetHeight + $('#status').offsetHeight + $('.game-actions').offsetHeight + 58;
+  const usableHeight = Math.max(250, viewport - reserved);
+  const heightLimitedWidth = ((usableHeight - gap * (rows - 1)) * wideColumns / (rows * cardRatio)) + gap * (wideColumns - 1);
+  const horizontalWidth = $('#game').clientWidth - 32;
+  board.style.width = `${Math.max(320, Math.min(680, horizontalWidth, heightLimitedWidth))}px`;
+}
 function render() {
   const board = $('#board'); const theme = currentTheme(); board.dataset.count = String(deck.length); board.style.setProperty('--cols', cols(deck.length)); board.style.setProperty('--back', theme.back);
   board.innerHTML = deck.map((card,index) => `<button class="card ${card.state === 'up' ? 'is-up' : ''} ${card.state === 'matched' ? 'is-matched' : ''}" data-index="${index}" aria-label="${cardLabel(card,index)}" ${card.state !== 'down' || locked ? 'aria-disabled="true"' : ''}><span class="face back" aria-hidden="true"></span><span class="face front"><img src="${card.image.src}" alt="${card.image.name}">${card.state === 'matched' ? '<b class="matched-mark" aria-hidden="true">✓</b>' : ''}</span></button>`).join('');
   const pairCount = DIFFICULTIES[prefs.difficulty].pairs; $('#progress').innerHTML = Array.from({length:pairCount},(_,i)=>`<span class="star ${i < completed ? 'done' : ''}" aria-label="${i < completed ? '已找到一对' : '还没找到的一对'}">★</span>`).join('');
   $('#peek').disabled = locked || chosen.length > 0 || completed === pairCount;
+  requestAnimationFrame(fitBoardToViewport);
 }
 function say(s) { $('#status').textContent = s; }
 function begin() { gameVersion++; clearTimer(); completed = 0; completedOnce = false; chosen = []; locked = false; try { deck = createDeck(currentTheme().images, DIFFICULTIES[prefs.difficulty].pairs); } catch (e) { say(e.message); return; } $('#complete').hidden = true; render(); say('翻两张，找一样的！'); }
@@ -49,5 +66,5 @@ $('#parent').onclick=()=>{document.querySelector(`input[name=delay][value="${pre
 document.querySelectorAll('input[name=delay]').forEach(r=>r.onchange=e=>{prefs.delay=Number(e.target.value);savePrefs();});
 $('#save-custom').onclick=async()=>{const files=[...$('#custom-files').files], name=$('#custom-name').value.trim()||'我的主题', msg=$('#import-message'); if(files.length<3||files.length>12){msg.textContent='请选 3 到 12 张不同图片。';return;}msg.textContent='正在准备图片…';try{const images=await Promise.all(files.map(async(f,i)=>({id:`custom-${Date.now()}-${i}`,name:`图片 ${i+1}`,src:await imageToData(f)})));const theme={id:`custom-${Date.now()}`,name,images,back:'#bd9dd1',custom:true};await db.put(theme);themes[theme.id]=theme;prefs.theme=theme.id;savePrefs();populateThemes();renderCustomList();msg.textContent='保存好了！';}catch(e){msg.textContent=e.message||'保存失败，可能是储存空间不足。';}};
 $('#custom-list').onclick=async e=>{const id=e.target.dataset.delete;if(!id||!confirm('删除这个自定义主题吗？'))return;try{await db.del(id);delete themes[id];if(prefs.theme===id)prefs.theme='animals';savePrefs();populateThemes();renderCustomList();}catch{$('#import-message').textContent='删除失败，请稍后再试。';}};
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&timer){pausedLeft=Math.max(0,dueAt-Date.now());clearTimeout(timer);timer=0;}else if(!document.hidden&&pausedLeft&&chosen.length===2){const left=pausedLeft;pausedLeft=0;dueAt=Date.now()+left;timer=setTimeout(()=>{const[a,b]=chosen;deck[a].state=deck[b].state='down';chosen=[];locked=false;render();say('再翻两张看看。');},left);}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&timer){pausedLeft=Math.max(0,dueAt-Date.now());clearTimeout(timer);timer=0;}else if(!document.hidden&&pausedLeft&&chosen.length===2){const left=pausedLeft;pausedLeft=0;dueAt=Date.now()+left;timer=setTimeout(()=>{const[a,b]=chosen;deck[a].state=deck[b].state='down';chosen=[];locked=false;render();say('再翻两张看看。');},left);}}); window.addEventListener('resize', fitBoardToViewport); window.visualViewport?.addEventListener('resize', fitBoardToViewport);
 setSoundButtons(); setLanguageButtons(); loadCustom(); if(!localStorage.getItem('memory-tutorial-seen')) { try { localStorage.setItem('memory-tutorial-seen','1'); setTimeout(()=>$('#learn').showModal(),150); } catch {} }
