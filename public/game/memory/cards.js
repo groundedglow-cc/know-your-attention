@@ -14,3 +14,11 @@ export const builtInThemes = {
   vehicles: { name: '交通工具', back: '#84b8df', images: [['kuruma','汽车','くるま','🚗'],['basu','公交车','バス','🚌'],['densha','火车','でんしゃ','🚂'],['hikouki','飞机','ひこうき','✈️'],['fune','轮船','ふね','🚢'],['shoberukaa','挖掘机','ショベルカー','🚜']].map(([id,name,japanese,icon]) => ({ id, name, japanese, audio: audio(id), src: svg(`<text x="80" y="103" text-anchor="middle" font-size="76">${icon}</text>`, '#f3f9ff') })) },
   fruits: { name: '水果', back: '#eea47d', images: [['ringo','苹果','りんご','🍎'],['banana','香蕉','バナナ','🍌'],['ichigo','草莓','いちご','🍓'],['budou','葡萄','ぶどう','🍇'],['suika','西瓜','すいか','🍉'],['orenji','橙子','オレンジ','🍊']].map(([id,name,japanese,icon]) => ({ id, name, japanese, audio: audio(id), src: svg(`<text x="80" y="105" text-anchor="middle" font-size="75">${icon}</text>`, '#fff9ef') })) },
 };
+
+const english = { neko: 'Cat', inu: 'Dog', usagi: 'Rabbit', zou: 'Elephant', panda: 'Panda', pengin: 'Penguin', kuruma: 'Car', basu: 'Bus', densha: 'Train', hikouki: 'Airplane', fune: 'Ship', shoberukaa: 'Excavator', ringo: 'Apple', banana: 'Banana', ichigo: 'Strawberry', budou: 'Grapes', suika: 'Watermelon', orenji: 'Orange' };
+for (const theme of Object.values(builtInThemes)) {
+  for (const image of theme.images) {
+    image.english = english[image.id];
+    image.audio = { ja: image.audio, en: image.audio.replace(/\.mp3$/, '-en.mp3') };
+  }
+}
