@@ -62,6 +62,18 @@
   <dialog id="settings" class="dialog">
     <h2>家长设置</h2>
     <fieldset>
+      <legend>棋盘大小</legend>
+      <label><input type="radio" name="board-size" value="3" checked> 3 × 3</label>
+      <label><input type="radio" name="board-size" value="4"> 4 × 4</label>
+      <label><input type="radio" name="board-size" value="5"> 5 × 5</label>
+    </fieldset>
+    <fieldset>
+      <legend>几连算赢</legend>
+      <label><input type="radio" name="win-length" value="3" checked> 三个连一线</label>
+      <label><input type="radio" name="win-length" value="4"> 四个连一线</label>
+      <label><input type="radio" name="win-length" value="5"> 五个连一线</label>
+    </fieldset>
+    <fieldset>
       <legend>小狗的难度</legend>
       <label><input type="radio" name="difficulty" value="easy" checked> 轻松（随便走走）</label>
       <label><input type="radio" name="difficulty" value="challenge"> 挑战（会挡你啦）</label>

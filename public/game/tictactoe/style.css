@@ -111,6 +111,12 @@ button:focus-visible, .cell:focus-visible {
 .cell.pressed { transform: scale(0.96); background: #fff6e8; }
 .cell.filled { cursor: default; }
 
+/* 更大棋盘：缩小间距与圆角，保证格子仍易点 */
+.board[data-size="4"] { gap: 10px; }
+.board[data-size="4"] .cell { border-radius: 16px; padding: 10%; }
+.board[data-size="5"] { gap: 8px; }
+.board[data-size="5"] .cell { border-radius: 12px; padding: 9%; }
+
 /* 提示光圈 */
 .cell.hint-halo {
   box-shadow: 0 0 0 5px var(--orange), 0 0 22px 6px rgba(246, 167, 92, 0.55);
@@ -151,7 +157,7 @@ button:focus-visible, .cell:focus-visible {
 /* 教学 */
 .tutorial { text-align: center; }
 #tutorial-message { font-size: 1.3rem; font-weight: 700; margin: 8px 0 16px; }
-.tutorial-board-wrap { position: relative; width: min(72vw, 240px); margin: 0 auto; }
+.tutorial-board-wrap { position: relative; width: min(82vw, 300px); margin: 0 auto; }
 .tutorial-board { width: 100%; gap: 8px; }
 .tutorial-board .cell { border-radius: 16px; }
 .tutorial-actions { margin-top: 16px; display: flex; justify-content: center; gap: 12px; }

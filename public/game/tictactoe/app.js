@@ -1,4 +1,4 @@
-import { CAT, DOG, CELLS, status, computerMove, hint } from './engine.js';
+import { CAT, DOG, createGame } from './engine.js';
 import { createSounds } from './sound.js';
 import { catPiece, dogPiece } from './art.js';
 
@@ -9,6 +9,8 @@ const storage = {
   setItem(k, v) { try { localStorage.setItem(k, v); } catch {} },
 };
 
+const CN_NUM = { 3: '三', 4: '四', 5: '五' };
+
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const sounds = createSounds({
@@ -16,13 +18,19 @@ const sounds = createSounds({
   storage,
 });
 
+function clampSize(s) { return s >= 3 && s <= 5 ? s : 3; }
+function clampWin(w, size) { return w >= 3 && w <= size ? w : size; }
+
 // ---- 状态 ----
 let mode = 'computer'; // 'computer' | 'family'
 let difficulty = storage.getItem('tictactoe-difficulty') === 'challenge' ? 'challenge' : 'easy';
+let boardSize = clampSize(parseInt(storage.getItem('tictactoe-size'), 10) || 3);
+let winLength = clampWin(parseInt(storage.getItem('tictactoe-win-length'), 10) || boardSize, boardSize);
 let tutorialDone = storage.getItem('tictactoe-tutorial-done') === '1';
 let familyStarter = CAT;
 
-let board = Array(CELLS).fill(null);
+let game = createGame(boardSize, winLength);
+let board = Array(game.cells).fill(null);
 let currentPlayer = CAT;
 let gameState = { state: 'playing' };
 let locked = false;
@@ -46,8 +54,8 @@ function clearTimers() {
 // ---- 工具 ----
 function cellEl(i) { return $('#board').children[i]; }
 function cellLabel(i, occupant) {
-  const row = Math.floor(i / 3) + 1;
-  const col = (i % 3) + 1;
+  const row = Math.floor(i / game.size) + 1;
+  const col = (i % game.size) + 1;
   const who = occupant === CAT ? '小猫' : occupant === DOG ? '小狗' : '空格';
   return `第${row}行第${col}列，${who}`;
 }
@@ -60,8 +68,10 @@ function showScreen(name) {
 // ---- 棋盘渲染 ----
 function renderBoard() {
   const boardEl = $('#board');
+  boardEl.style.gridTemplateColumns = `repeat(${game.size}, 1fr)`;
+  boardEl.dataset.size = game.size;
   boardEl.innerHTML = '';
-  for (let i = 0; i < CELLS; i++) {
+  for (let i = 0; i < game.cells; i++) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'cell';
@@ -176,7 +186,7 @@ function commit(i, player) {
   sounds.play('place');
 
   locked = true;
-  const s = status(board);
+  const s = game.status(board);
   if (s.state !== 'playing') {
     currentPlayer = null;
     renderTurn();
@@ -199,16 +209,17 @@ function commit(i, player) {
 function scheduleComputerMove() {
   const delay = 600 + Math.random() * 300;
   schedule(() => {
-    const i = computerMove(board, DOG, difficulty);
+    const i = game.computerMove(board, DOG, difficulty);
     if (i >= 0 && gameState.state === 'playing') commit(i, DOG);
   }, delay);
 }
 
 // ---- 结束 ----
 function resultText(s) {
+  const n = CN_NUM[winLength] || String(winLength);
   if (s.state === 'draw') return '棋盘满啦，这次平手！';
   if (mode === 'computer') {
-    return s.player === CAT ? '三个连起来啦！' : '小狗连成三个啦，再试一次吧！';
+    return s.player === CAT ? `${n}个连起来啦！` : `小狗连成${n}个啦，再试一次吧！`;
   }
   return s.player === CAT ? '小猫赢啦！' : '小狗赢啦！';
 }
@@ -319,7 +330,7 @@ function clearOverlays() {
 function showHint() {
   if (gameState.state !== 'playing') return;
   if (mode === 'computer' && currentPlayer !== CAT) return;
-  const i = hint(board, currentPlayer);
+  const i = game.hint(board, currentPlayer);
   if (i < 0) return;
   if (hintHaloEl) hintHaloEl.classList.remove('hint-halo');
   hintHaloEl = cellEl(i);
@@ -332,7 +343,8 @@ function showHint() {
 // ---- 流程 ----
 function startGame(m) {
   mode = m;
-  board = Array(CELLS).fill(null);
+  game = createGame(boardSize, winLength);
+  board = Array(game.cells).fill(null);
   if (mode === 'computer') {
     currentPlayer = CAT;
   } else {
@@ -354,7 +366,7 @@ function startGame(m) {
 function goHome() {
   clearTimers();
   locked = false;
-  board = Array(CELLS).fill(null);
+  board = Array(game.cells).fill(null);
   gameState = { state: 'playing' };
   clearOverlays();
   showScreen('home');
@@ -369,8 +381,9 @@ function beginOrTutorial(m) {
 
 // ---- 教学 ----
 function showTutorial() {
+  game = createGame(boardSize, winLength);
   const dialog = $('#tutorial');
-  $('#tutorial-message').textContent = '点一下空格，补成三个小猫';
+  $('#tutorial-message').textContent = '点一下空格，连成一条线';
   $('#tutorial-start').hidden = true;
   $('#tutorial-skip').hidden = false;
   $('#tutorial-line').innerHTML = '';
@@ -378,42 +391,54 @@ function showTutorial() {
   dialog.showModal();
 }
 
+function tutorialLayout() {
+  // winLength-1 cats in the top row, one empty target to complete the line.
+  const placed = [];
+  const line = [];
+  for (let c = 0; c < winLength; c++) {
+    line.push(c);
+    if (c < winLength - 1) placed.push(c);
+  }
+  return { placed, target: winLength - 1, line };
+}
+
 function renderTutorialBoard() {
   const boardEl = $('#tutorial-board');
+  boardEl.style.gridTemplateColumns = `repeat(${game.size}, 1fr)`;
+  boardEl.dataset.size = game.size;
+  const { placed, target, line } = tutorialLayout();
   boardEl.innerHTML = '';
-  for (let i = 0; i < CELLS; i++) {
+  for (let i = 0; i < game.cells; i++) {
     const cell = document.createElement('button');
     cell.type = 'button';
     cell.className = 'cell';
     cell.dataset.index = i;
-    if (i === 0 || i === 2) {
+    if (placed.includes(i)) {
       cell.innerHTML = catPiece();
       cell.classList.add('filled');
       cell.setAttribute('aria-label', cellLabel(i, CAT));
     } else {
       cell.setAttribute('aria-label', cellLabel(i, null));
-      if (i === 1) cell.classList.add('hint-halo');
+      if (i === target) cell.classList.add('hint-halo');
     }
-    cell.addEventListener('click', () => onTutorialTap(i, cell));
+    cell.addEventListener('click', () => onTutorialTap(i, cell, target, line));
     boardEl.appendChild(cell);
   }
 }
 
-function onTutorialTap(i, cell) {
-  if (i !== 1) return;
+function onTutorialTap(i, cell, target, line) {
+  if (i !== target) return;
   cell.innerHTML = catPiece();
   cell.classList.remove('hint-halo');
   cell.classList.add('filled', 'drop');
   sounds.play('place');
-  $('#tutorial-message').textContent = '三个连起来啦！';
-  const line = [0, 1, 2];
+  $('#tutorial-message').textContent = '连成一条线啦！';
   line.forEach((idx, n) => {
     const c = $('#tutorial-board').children[idx];
     c.classList.add('win-cell');
     c.style.animationDelay = (n * 0.16) + 's';
   });
-  const boardEl = $('#tutorial-board');
-  drawLine(boardEl, $('.tutorial-board-wrap'), $('#tutorial-line'), line);
+  drawLine($('#tutorial-board'), $('.tutorial-board-wrap'), $('#tutorial-line'), line);
   schedule(() => {
     $('#tutorial-start').hidden = false;
     $('#tutorial-skip').hidden = true;
@@ -439,11 +464,31 @@ function finishTutorial() {
 }
 
 // ---- 设置 ----
+function syncWinLengthOptions() {
+  document.querySelectorAll('input[name="win-length"]').forEach((r) => {
+    r.disabled = Number(r.value) > boardSize;
+  });
+  if (winLength > boardSize) winLength = boardSize;
+  document.querySelectorAll('input[name="win-length"]').forEach((r) => {
+    r.checked = r.value === String(winLength);
+  });
+}
+
 function openSettings() {
   document.querySelectorAll('input[name="difficulty"]').forEach((r) => {
     r.checked = r.value === difficulty;
   });
+  document.querySelectorAll('input[name="board-size"]').forEach((r) => {
+    r.checked = r.value === String(boardSize);
+  });
+  syncWinLengthOptions();
   $('#settings').showModal();
+}
+
+function persistSettings() {
+  storage.setItem('tictactoe-size', String(boardSize));
+  storage.setItem('tictactoe-win-length', String(winLength));
+  storage.setItem('tictactoe-difficulty', difficulty);
 }
 
 // ---- 事件绑定 ----
@@ -453,18 +498,28 @@ $('#hero-dog').innerHTML = dogPiece();
 $('#play-computer').addEventListener('click', () => beginOrTutorial('computer'));
 $('#play-family').addEventListener('click', () => beginOrTutorial('family'));
 $('#open-settings').addEventListener('click', openSettings);
-$('#close-settings').addEventListener('click', () => $('#settings').close());
+$('#close-settings').addEventListener('click', () => { persistSettings(); $('#settings').close(); });
 $('#replay-tutorial').addEventListener('click', () => {
   $('#settings').close();
   pendingStartMode = null;
   showTutorial();
 });
+
 document.querySelectorAll('input[name="difficulty"]').forEach((input) => {
   input.addEventListener('change', () => {
-    if (input.checked) {
-      difficulty = input.value === 'challenge' ? 'challenge' : 'easy';
-      storage.setItem('tictactoe-difficulty', difficulty);
-    }
+    if (input.checked) difficulty = input.value === 'challenge' ? 'challenge' : 'easy';
+  });
+});
+document.querySelectorAll('input[name="board-size"]').forEach((input) => {
+  input.addEventListener('change', () => {
+    if (!input.checked) return;
+    boardSize = clampSize(Number(input.value));
+    syncWinLengthOptions();
+  });
+});
+document.querySelectorAll('input[name="win-length"]').forEach((input) => {
+  input.addEventListener('change', () => {
+    if (input.checked) winLength = clampWin(Number(input.value), boardSize);
   });
 });
 
