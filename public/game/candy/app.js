@@ -238,11 +238,14 @@ document.addEventListener('pointermove', e => {
   e.preventDefault(); if (!drag.active) { drag.active = true; const ghost = document.createElement('div'); ghost.id = 'ghost'; ghost.innerHTML = art(drag.source); document.body.append(ghost); }
   const lift = e.pointerType === 'touch' ? 90 : 40;
   $('#ghost').style.transform = `translate(${e.clientX - 40}px, ${e.clientY - lift}px)`;
+  // The ghost floats `lift`px above the finger, so hit-test the ghost's centre
+  // (where the card is actually drawn) rather than the finger position.
+  const px = e.clientX, py = e.clientY - lift + 40;
   document.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
-  const target = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-cell],#trash');
+  const target = document.elementFromPoint(px, py)?.closest('[data-cell],#trash');
   if (target && (target.id === 'trash' || !fixed(level(), Number(target.dataset.cell)) && !board[Number(target.dataset.cell)])) target.classList.add('drop-target');
 }, { passive: false });
-function endDrag(e, cancel = false) { if (!drag || e.pointerId !== drag.id) return; const d = drag; drag = null; $('#ghost')?.remove(); document.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target')); if (!d.active) return; suppressClick = true; setTimeout(() => suppressClick = false, 50); if (cancel) return; const target = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-cell],#trash'); if (target?.id === 'trash') recycle(d.source); else if (target?.dataset.cell !== undefined) place(d.source, Number(target.dataset.cell)); else blocked('没有放进格子，卡片已经回到原处。'); }
+function endDrag(e, cancel = false) { if (!drag || e.pointerId !== drag.id) return; const d = drag; drag = null; $('#ghost')?.remove(); document.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target')); if (!d.active) return; suppressClick = true; setTimeout(() => suppressClick = false, 50); if (cancel) return; const lift = e.pointerType === 'touch' ? 90 : 40; const target = document.elementFromPoint(e.clientX, e.clientY - lift + 40)?.closest('[data-cell],#trash'); if (target?.id === 'trash') recycle(d.source); else if (target?.dataset.cell !== undefined) place(d.source, Number(target.dataset.cell)); else blocked('没有放进格子，卡片已经回到原处。'); }
 document.addEventListener('pointerup', e => endDrag(e)); document.addEventListener('pointercancel', e => endDrag(e, true));
 function celebrate() { if (matchMedia('(prefers-reduced-motion: reduce)').matches) return; for (let i = 0; i < 24; i++) { const p = document.createElement('i'); p.className = 'confetti'; p.style.cssText = `--x:${Math.random() * 100}vw;--delay:${Math.random() * .4}s;--color:${['#dfa88c', '#e3c665', '#55a29a', '#a4b59b'][i % 4]};--turn:${Math.random() * 720}deg`; document.body.append(p); setTimeout(() => p.remove(), 2400); } }
 load(); try { if (!localStorage.getItem('candy-guide-seen')) guide.showModal(); } catch {}
