@@ -1,5 +1,5 @@
 import { levels } from './levels.js?v=40';
-import { pieceName, ports, fixed, isStop, complete, hint } from './engine.js?v=43';
+import { pieceName, ports, fixed, isStop, complete, hint } from './engine.js?v=44';
 import { art } from './art.js?v=40';
 import { buddy, basket } from './characters.js?v=40';
 import { setupTutorial } from './tutorial.js?v=40';
@@ -29,10 +29,6 @@ const level = () => levels[levelIndex];
 
 function freeCells(l) { return l.size ** 2 - l.stops.length - l.belts.length * 2 - Object.keys(l.given).length; }
 function pieceKey(color, kind) { return color ? `${color}-${kind}` : kind; }
-function remaining(color, kind) {
-  const key = pieceKey(color, kind);
-  return (level().palette[key] || 0) - board.filter(t => t?.kind === kind && (!color || t?.color === color)).length;
-}
 
 function load() {
   const l = level(), stored = boards[l.id];
@@ -102,11 +98,11 @@ function render() {
     return `<button class="cell ${fixedCell ? 'fixed ' + typeClass : ''} ${selected?.index === i ? 'selected' : ''} ${hintCell === i ? 'hinted' : ''}" data-cell="${i}" aria-label="${String.fromCharCode(65 + Math.floor(i / l.size))}${i % l.size + 1} ${label}" aria-pressed="${selected?.index === i}">${artFor(l, i)}${hintCell === i ? `<span class="cell-cue">${visualHint?.error ? '↻' : '👆'}</span>${!visualHint?.error && hintStage > 1 ? `<span class="hint-preview">${art(visualHint.tile)}</span>` : ''}` : ''}${info.type === 'start' || info.type === 'end' ? `<small>${info.type === 'start' ? '起点' : '终点'}</small>` : ''}</button>`;
   }).join('');
   const pieces = palettePieces(l);
-  $('#palette').innerHTML = pieces.map(({ color, kind, count }) => {
+  $('#palette').innerHTML = pieces.map(({ color, kind }) => {
     const key = pieceKey(color, kind);
     const isSel = selected?.index === undefined && selected?.kind === kind && (!color || selected?.color === color);
     const tile = color ? { kind, color, rotation: isSel ? selected.rotation : 0 } : { kind, rotation: isSel ? selected.rotation : 0 };
-    return `<button data-piece="${key}" class="piece ${isSel ? 'selected' : ''}" aria-label="选择${pieceName(color, kind)}" aria-pressed="${isSel}"><span class="piece-art">${art(tile)}</span><span>${pieceName(color, kind)}<small>剩余 ${remaining(color, kind)} 张</small></span><b>＋</b></button>`;
+    return `<button data-piece="${key}" class="piece ${isSel ? 'selected' : ''}" aria-label="选择${pieceName(color, kind)}" aria-pressed="${isSel}"><span class="piece-art">${art(tile)}</span><span>${pieceName(color, kind)}</span><b>＋</b></button>`;
   }).join('');
   renderVisualHint();
   $('#trash').classList.toggle('ready', selected?.index !== undefined && !isComplete);
@@ -150,7 +146,6 @@ function place(source, index) {
   if (won) { blocked('这一关已经通关啦！'); return; }
   if (fixed(level(), index)) { blocked('起点、终点和 STOP 都是固定的，换一个空格试试吧。'); return; }
   if (board[index]) { blocked('这里已经有卡片了，点一下它旋转，或拖到回收站。'); return; }
-  if (source.index === undefined && remaining(source.color, source.kind) <= 0) { blocked('这种卡片用完啦。'); return; }
   snapshot();
   board[index] = { kind: source.kind, color: source.color, rotation: source.rotation };
   if (source.index !== undefined) board[source.index] = null;

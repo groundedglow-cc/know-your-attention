@@ -203,10 +203,9 @@ export function paletteFor(level) {
 }
 
 export function hint(level, board) {
-  const limits = level.palette || null;
-  const answer = solve(level, [], limits);
+  const answer = solve(level, []);
   if (!answer) return null;
-  const solution = solve(level, board, limits);
+  const solution = solve(level, board);
   if (solution) {
     const i = solution.findIndex((t, i) => t && !board[i]);
     return i < 0 ? null : { index: i, tile: solution[i], error: false };
@@ -217,7 +216,7 @@ export function hint(level, board) {
   if (mismatch >= 0) return { index: mismatch, error: true };
   for (let i = 0; i < board.length; i++) if (board[i]) {
     const copy = [...board]; copy[i] = null;
-    if (solve(level, copy, limits)) return { index: i, error: true };
+    if (solve(level, copy)) return { index: i, error: true };
   }
   return null;
 }
