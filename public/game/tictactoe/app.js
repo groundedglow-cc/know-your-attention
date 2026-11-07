@@ -1,6 +1,6 @@
-import { CAT, DOG, createGame } from './engine.js';
-import { createSounds } from './sound.js';
-import { catPiece, dogPiece } from './art.js';
+import { CAT, DOG, createGame } from './engine.js?v=2';
+import { createSounds } from './sound.js?v=2';
+import { catPiece, dogPiece } from './art.js?v=2';
 
 const $ = (sel) => document.querySelector(sel);
 
