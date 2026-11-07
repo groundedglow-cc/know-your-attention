@@ -13,7 +13,7 @@ $('#sound-toggle').onclick = () => { sounds.toggle(); updateSoundButton(); }; up
 function blocked(message) { sounds.play('blocked'); if (message) say(message); }
 document.addEventListener('pointerdown', e => { if (e.target.closest('button:disabled')) sounds.play('blocked'); }, true);
 document.addEventListener('selectstart', e => e.preventDefault(), { passive: false });
-document.addEventListener('contextmenu', e => { if (e.target.closest('#board,#palette,#trash,#guide')) e.preventDefault(); });
+document.addEventListener('contextmenu', e => e.preventDefault());
 $('#hint-buddy').innerHTML = buddy;
 $('#basket-art').innerHTML = basket;
 
@@ -22,7 +22,8 @@ let saved; try { saved = JSON.parse(localStorage.getItem(storageKey)); } catch {
 let levelIndex;
 let board, selected = null, history = [], hintCell = -1, hintStage = 0, visualHint = null, won = false;
 const completed = new Set((saved?.completed || []).filter(id => levels.some(l => l.id === id)));
-levelIndex = firstUnfinished(levels, completed);
+const savedIndex = saved?.level != null ? levels.findIndex(l => l.id === saved.level) : -1;
+levelIndex = savedIndex >= 0 ? savedIndex : firstUnfinished(levels, completed);
 const boards = saved?.boards && typeof saved.boards === 'object' ? saved.boards : {};
 const level = () => levels[levelIndex];
 
@@ -113,7 +114,12 @@ function render() {
   $('#rotate').disabled = !selected || isComplete;
   $('#win').hidden = !isComplete;
   $('#next').textContent = levelIndex === levels.length - 1 ? '再玩一次 ↻' : '下一关 →';
-  if (isComplete && !won) { say('太棒了！糖果顺利到达，每个管口都接好啦！'); celebrate(); sounds.play('success'); }
+  if (isComplete && !won) {
+    say('太棒了！糖果顺利到达，每个管口都接好啦！');
+    celebrate();
+    sounds.play('success');
+    if (levelIndex < levels.length - 1) setTimeout(() => { if (won && levelIndex < levels.length - 1) switchLevel(levelIndex + 1); }, 1600);
+  }
   won = isComplete; save();
 }
 function palettePieces(l) {
