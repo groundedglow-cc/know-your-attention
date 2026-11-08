@@ -14,6 +14,7 @@ function blocked(message) { sounds.play('blocked'); if (message) say(message); }
 document.addEventListener('pointerdown', e => { if (e.target.closest('button:disabled')) sounds.play('blocked'); }, true);
 document.addEventListener('selectstart', e => e.preventDefault(), { passive: false });
 document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('dragstart', e => e.preventDefault());
 $('#hint-buddy').innerHTML = buddy;
 $('#basket-art').innerHTML = basket;
 
