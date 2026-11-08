@@ -3,6 +3,7 @@
 import { existsSync } from 'node:fs';
 import { mkdir, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { builtInThemes } from '../public/game/memory/cards.js';
 
 const region = String(process.env.AZURE_SPEECH_REGION || '').trim().toLowerCase().replace(/\s+/g, '');
 const key = process.env.AZURE_SPEECH_KEY;
@@ -10,8 +11,9 @@ const jaVoice = process.env.AZURE_TTS_VOICE_ID || 'ja-JP-NanamiNeural';
 const enVoice = process.env.AZURE_EN_TTS_VOICE_ID || 'en-US-JennyNeural';
 if (!key || !region) throw new Error('Missing AZURE_SPEECH_KEY or AZURE_SPEECH_REGION. No Azure request was sent.');
 if (!/^ja-JP-[A-Za-z]+Neural$/.test(jaVoice) || !/^en-US-[A-Za-z]+Neural$/.test(enVoice)) throw new Error('Expected Japanese and US English Azure Neural voices.');
-const japanese = [['neko','ねこ'],['inu','いぬ'],['usagi','うさぎ'],['zou','ぞう'],['panda','パンダ'],['pengin','ペンギン'],['kuruma','くるま'],['basu','バス'],['densha','でんしゃ'],['hikouki','ひこうき'],['fune','ふね'],['shoberukaa','ショベルカー'],['ringo','りんご'],['banana','バナナ'],['ichigo','いちご'],['budou','ぶどう'],['suika','すいか'],['orenji','オレンジ'],['praise-sugoi','すごい！'],['praise-iine','いいね！'],['praise-jouzu','じょうず！']];
-const english = [['neko','Cat'],['inu','Dog'],['usagi','Rabbit'],['zou','Elephant'],['panda','Panda'],['pengin','Penguin'],['kuruma','Car'],['basu','Bus'],['densha','Train'],['hikouki','Airplane'],['fune','Ship'],['shoberukaa','Excavator'],['ringo','Apple'],['banana','Banana'],['ichigo','Strawberry'],['budou','Grapes'],['suika','Watermelon'],['orenji','Orange'],['praise-great','Great!'],['praise-nice','Nice!'],['praise-welldone','Well done!']].map(([id,text]) => [`${id}-en`,text]);
+const cards = Object.values(builtInThemes).flatMap(theme => theme.images);
+const japanese = [...cards.map(card => [card.id, card.japanese]), ['praise-sugoi','すごい！'], ['praise-iine','いいね！'], ['praise-jouzu','じょうず！']];
+const english = [...cards.map(card => [`${card.id}-en`, card.english]), ['praise-great-en','Great!'], ['praise-nice-en','Nice!'], ['praise-welldone-en','Well done!']];
 const jobs = [...japanese.map(([id,text]) => ({ id, text, voice: jaVoice, locale: 'ja-JP' })), ...english.map(([id,text]) => ({ id, text, voice: enVoice, locale: 'en-US' }))];
 const folder = 'public/game/memory/audio', endpoint = `https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`;
 await mkdir(folder, { recursive: true });

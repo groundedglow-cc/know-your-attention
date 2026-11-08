@@ -13,12 +13,15 @@ export function createSounds(storage) {
     stopWord();
     return new Promise(resolve => {
       try {
-        wordAudio = new Audio(src);
+        wordAudio = new Audio();
+        wordAudio.preload = 'auto';
+        wordAudio.src = src;
         let done = false;
         const finish = () => { if (done) return; done = true; if (finishWord === finish) finishWord = null; resolve(); };
         finishWord = finish;
         wordAudio.addEventListener('ended', finish, { once: true });
         wordAudio.addEventListener('error', finish, { once: true });
+        wordAudio.load();
         wordAudio.play().catch(finish);
       } catch { resolve(); }
     });

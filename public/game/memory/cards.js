@@ -15,10 +15,40 @@ export const builtInThemes = {
   fruits: { name: '水果', back: '#eea47d', images: [['ringo','苹果','りんご','🍎'],['banana','香蕉','バナナ','🍌'],['ichigo','草莓','いちご','🍓'],['budou','葡萄','ぶどう','🍇'],['suika','西瓜','すいか','🍉'],['orenji','橙子','オレンジ','🍊']].map(([id,name,japanese,icon]) => ({ id, name, japanese, audio: audio(id), src: svg(`<text x="80" y="105" text-anchor="middle" font-size="75">${icon}</text>`, '#fff9ef') })) },
 };
 
+const generatedTheme = (id, name, back, entries) => ({
+  name, back,
+  images: entries.map(([key, chinese, japanese, english], index) => ({
+    id: key, name: chinese, japanese, english,
+    audio: { ja: audio(key), en: audio(`${key}-en`) },
+    src: `/game/memory/assets/${id}-${index + 1}.png`,
+  })),
+});
+
+Object.assign(builtInThemes, {
+  body: generatedTheme('body', '身体', '#c9a9d9', [
+    ['atama','头','あたま','Head'],['me','眼睛','め','Eye'],['hana','鼻子','はな','Nose'],['mimi','耳朵','みみ','Ear'],['kuchi','嘴巴','くち','Mouth'],['te','手','て','Hand'],['onaka','肚子','おなか','Tummy'],['hiza','膝盖','ひざ','Knee'],['kata','肩膀','かた','Shoulder'],['ashi','脚','あし','Foot'],['kami','头发','かみ','Hair'],['yubi','手指','ゆび','Finger'],
+  ]),
+  food: generatedTheme('food', '食物', '#f2c26b', [
+    ['gohan','米饭','ごはん','Rice'],['pan','面包','パン','Bread'],['sandoicchi','三明治','サンドイッチ','Sandwich'],['onigiri','饭团','おにぎり','Rice ball'],['sushi','寿司','すし','Sushi'],['tamago','鸡蛋','たまご','Egg'],['ringo2','苹果','りんご','Apple'],['banana2','香蕉','バナナ','Banana'],['miruku','牛奶','ミルク','Milk'],['mizu','水','みず','Water'],['chiizu','奶酪','チーズ','Cheese'],['ichigo2','草莓','いちご','Strawberry'],
+  ]),
+  home: generatedTheme('home', '房子', '#a9c5d8', [
+    ['reizoko','冰箱','れいぞうこ','Fridge'],['sentakuki','洗衣机','せんたくき','Washing machine'],['daidokoro','厨房','だいどころ','Kitchen'],['genkan','玄关','げんかん','Entryway'],['doa','门','ドア','Door'],['kabe','墙壁','かべ','Wall'],['mado','窗户','まど','Window'],['beddo','床','ベッド','Bed'],['ofuro','浴室','おふろ','Bath'],['toire','厕所','トイレ','Toilet'],['table','桌子','テーブル','Table'],['ranpu','台灯','ランプ','Lamp'],
+  ]),
+  routines: generatedTheme('routines', '日常习惯', '#e6ad9f', [
+    ['hamigaki','刷牙','はを みがく','Brush teeth'],['tearau','洗手','てを あらう','Wash hands'],['gohan2','吃饭','ごはんを たべる','Eat a meal'],['mizu2','喝水','みずを のむ','Drink water'],['sanpo','散步','さんぽ','Take a walk'],['okiru','起床','おきる','Wake up'],['kigaeru','换衣服','きがえる','Get dressed'],['neru','睡觉','ねる','Sleep'],['kutsu','穿鞋','くつを はく','Put on shoes'],['hon','读书','ほんを よむ','Read a book'],['wakete','分享玩具','おもちゃを わける','Share a toy'],['katazuke','收拾玩具','かたづける','Tidy up'],
+  ]),
+  weather: generatedTheme('weather', '天气', '#9bc5d4', [
+    ['ame','下雨','あめ','Rain'],['hare','晴天','はれ','Sunny'],['kumori','阴天','くもり','Cloudy'],['kaze','风','かぜ','Wind'],['yuki','下雪','ゆき','Snow'],['taiyo','太阳','たいよう','Sun'],['atsui','热','あつい','Hot'],['samui','冷','さむい','Cold'],['niji','彩虹','にじ','Rainbow'],['kasa','雨伞','かさ','Umbrella'],['mizutamari','水洼','みずたまり','Puddle'],['tsuki','月亮','つき','Moon'],
+  ]),
+  greetings: generatedTheme('greetings', '问候礼貌', '#f0b7a5', [
+    ['konnichiwa','你好','こんにちは','Hello'],['ohayo','早上好','おはよう','Good morning'],['konbanwa','晚上好','こんばんは','Good evening'],['oyasumi','晚安','おやすみ','Good night'],['arigato','谢谢','ありがとう','Thank you'],['gomen','对不起','ごめんね','Sorry'],['onegai','请','おねがい','Please'],['matane','再见','またね','See you'],['okaeri','欢迎回家','おかえり','Welcome home'],['highfive','击掌','ハイタッチ','High five'],['egao','笑脸','えがお','Smile'],['kokoro','爱心','こころ','Heart'],
+  ]),
+});
+
 const english = { neko: 'Cat', inu: 'Dog', usagi: 'Rabbit', zou: 'Elephant', panda: 'Panda', pengin: 'Penguin', kuruma: 'Car', basu: 'Bus', densha: 'Train', hikouki: 'Airplane', fune: 'Ship', shoberukaa: 'Excavator', ringo: 'Apple', banana: 'Banana', ichigo: 'Strawberry', budou: 'Grapes', suika: 'Watermelon', orenji: 'Orange' };
 for (const theme of Object.values(builtInThemes)) {
   for (const image of theme.images) {
-    image.english = english[image.id];
-    image.audio = { ja: image.audio, en: image.audio.replace(/\.mp3$/, '-en.mp3') };
+    image.english = image.english || english[image.id];
+    if (typeof image.audio === 'string') image.audio = { ja: image.audio, en: image.audio.replace(/\.mp3$/, '-en.mp3') };
   }
 }
