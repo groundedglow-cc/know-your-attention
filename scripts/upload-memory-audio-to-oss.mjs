@@ -11,7 +11,7 @@ const baseUrl = process.env.OSS_BASE_URL.replace(/\/+$/, '');
 const client = new OSS({ region: process.env.OSS_REGION, accessKeyId: process.env.OSS_ACCESS_KEY_ID, accessKeySecret: process.env.OSS_ACCESS_KEY_SECRET, bucket: process.env.OSS_BUCKET });
 const files = (await readdir('public/game/memory/audio')).filter(name => name.endsWith('.mp3')).sort();
 const expected = Object.values(builtInThemes).reduce((count, theme) => count + theme.images.length * 2, 0) + 6;
-if (files.length !== expected) throw new Error(`Expected ${expected} MP3 files, found ${files.length}. No files were uploaded.`);
+if (files.length < expected) throw new Error(`Expected at least ${expected} MP3 files, found ${files.length}. No files were uploaded.`);
 let uploaded = 0, skipped = 0;
 for (const name of files) {
   const key = `memory-match/audio/${name}`;

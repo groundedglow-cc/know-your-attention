@@ -2,7 +2,6 @@ import { builtInThemes } from './cards.js?v=3';
 import { DIFFICULTIES, createDeck, canFlip, compare } from './engine.js?v=3';
 import { createSounds } from './sound.js?v=3';
 const $ = s => document.querySelector(s);
-const blockedCardStyle = document.createElement('style'); blockedCardStyle.textContent = '.card.is-blocked{filter:grayscale(1);opacity:.38;cursor:not-allowed;transform:none}.card.is-blocked:active{transform:none}.front{display:flex!important;flex-direction:column!important;justify-content:center!important;gap:2px!important}.front img{width:100%;height:70%;padding:3% 7% 0!important;object-fit:contain}.card-caption{display:flex;flex-direction:column;align-items:center;line-height:1.05;padding:0 4px 5px;max-width:100%;overflow:hidden}.card-caption strong{font-size:clamp(.63rem,1.5vw,.86rem);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.card-caption small{font-size:clamp(.55rem,1.25vw,.72rem);color:#806c61;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}'; document.head.append(blockedCardStyle);
 const storageKey = 'memory-match-settings-v1';
 let prefs = { theme: 'animals', difficulty: 'easy', delay: 1800, language: 'ja' };
 try { prefs = { ...prefs, ...JSON.parse(localStorage.getItem(storageKey)) }; } catch {}
@@ -26,11 +25,16 @@ function renderSeriesGrid() {
   const grid = $('#series-grid');
   if (!grid) return;
   const entries = Object.entries(themes);
-  grid.innerHTML = entries.map(([id, theme], index) => {
+  const groups = ['入园必会', '单词', '短语'];
+  const card = ([id, theme], index) => {
     const image = theme.images?.[0];
     const number = theme.custom ? '我的' : String(index + 1).padStart(2, '0');
-    const description = theme.custom ? '本地图片主题' : (builtInDescriptions[id] || '发现新的词语');
+    const description = `${theme.images.length} 个${theme.group === '单词' ? '词汇' : '表达'}`;
     return `<button class="series-card" type="button" data-series="${id}" aria-label="系列 ${number}，${theme.name}"><img src="${image?.src || ''}" alt=""><strong>${theme.name}</strong><small><span class="series-number">系列 ${number}</span> · ${description}</small></button>`;
+  };
+  grid.innerHTML = groups.map(group => {
+    const groupEntries = entries.filter(([, theme]) => (theme.group || '单词') === group);
+    return `<section class="series-group"><h2>${group}</h2><div class="series-group-grid">${groupEntries.map((entry, index) => card(entry, entries.indexOf(entry))).join('')}</div></section>`;
   }).join('');
   renderDifficultyButtons();
 }

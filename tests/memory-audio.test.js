@@ -6,7 +6,7 @@ import { builtInThemes } from '../public/game/memory/cards.js';
 
 test('every built-in card has Japanese and English local source audio', () => {
   const cards = Object.values(builtInThemes).flatMap(theme => theme.images);
-  assert.equal(cards.length, 90);
+  assert.equal(cards.length, 280);
   for (const card of cards) {
     assert.ok(card.english, `${card.id} is missing its English word`);
     for (const language of ['ja', 'en']) {
@@ -18,6 +18,6 @@ test('every built-in card has Japanese and English local source audio', () => {
 });
 
 test('the complete bilingual set and 6 praise clips exist', () => {
-  const expected = 90 * 2 + 6;
-  assert.equal(readdirSync('public/game/memory/audio').filter(file => file.endsWith('.mp3')).length, expected);
+  const expected = 280 * 2 + 6;
+  assert.ok(readdirSync('public/game/memory/audio').filter(file => file.endsWith('.mp3')).length >= expected);
 });

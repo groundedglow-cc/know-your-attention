@@ -20,7 +20,7 @@ const generatedTheme = (id, name, back, entries) => ({
   images: entries.map(([key, chinese, japanese, english], index) => ({
     id: key, name: chinese, japanese, english,
     audio: { ja: audio(key), en: audio(`${key}-en`) },
-    src: `/game/memory/assets/${id}-${index + 1}.png`,
+    src: `/game/memory/assets/${id}-${index + 1}.png?v=2`,
   })),
 });
 
@@ -43,7 +43,58 @@ Object.assign(builtInThemes, {
   greetings: generatedTheme('greetings', '问候礼貌', '#f0b7a5', [
     ['konnichiwa','你好','こんにちは','Hello'],['ohayo','早上好','おはよう','Good morning'],['konbanwa','晚上好','こんばんは','Good evening'],['oyasumi','晚安','おやすみ','Good night'],['arigato','谢谢','ありがとう','Thank you'],['gomen','对不起','ごめんね','Sorry'],['onegai','请','おねがい','Please'],['matane','再见','またね','See you'],['okaeri','欢迎回家','おかえり','Welcome home'],['highfive','击掌','ハイタッチ','High five'],['egao','笑脸','えがお','Smile'],['kokoro','爱心','こころ','Heart'],
   ]),
+  clothes: generatedTheme('clothes', '衣物', '#d9b6cb', [
+    ['shatsu','上衣','シャツ','Shirt'],['zubon','裤子','ズボン','Pants'],['kutsu2','鞋子','くつ','Shoes'],['kutsushita','袜子','くつした','Socks'],['boushi','帽子','ぼうし','Hat'],['kooto','外套','コート','Coat'],['sukaato','裙子','スカート','Skirt'],['uwagi','衬衫','うわぎ','Jacket'],['tebukuro','手套','てぶくろ','Gloves'],['mafuraa','围巾','マフラー','Scarf'],['amegappa','雨衣','あめがっぱ','Raincoat'],['nemaki','睡衣','ねまき','Pajamas'],
+  ]),
+  colors: generatedTheme('colors', '颜色大小', '#b9cbe3', [
+    ['aka','红色','あか','Red'],['ao','蓝色','あお','Blue'],['kiiro','黄色','きいろ','Yellow'],['midori','绿色','みどり','Green'],['orenji2','橙色','オレンジ','Orange'],['murasaki','紫色','むらさき','Purple'],['pink','粉色','ピンク','Pink'],['kuro','黑色','くろ','Black'],['shiro','白色','しろ','White'],['chairo','棕色','ちゃいろ','Brown'],['ookii','大','おおきい','Big'],['chiisai','小','ちいさい','Small'],
+  ]),
+  toys: generatedTheme('toys', '玩具', '#d8b6d7', [
+    ['booru','球','ボール','Ball'],['tsumiki','积木','つみき','Blocks'],['omochacar','玩具车','おもちゃのくるま','Toy car'],['ningyou','娃娃','にんぎょう','Doll'],['kuma','玩具熊','くま','Teddy bear'],['pazuru','拼图','パズル','Puzzle'],['iroenpitsu','蜡笔','いろえんぴつ','Crayons'],['fuusen','气球','ふうせん','Balloon'],['takko','风筝','たこ','Kite'],['ehon','故事书','えほん','Story book'],['awa','泡泡','あわ','Bubbles'],['robotto','机器人','ロボット','Robot'],
+  ]),
+  school: generatedTheme('school', '幼儿园', '#b9d6c0', [
+    ['youchien','幼儿园','ようちえん','Preschool'],['sensei','老师','せんせい','Teacher'],['tomodachi','朋友','ともだち','Friend'],['hon2','书','ほん','Book'],['enpitsu','铅笔','えんぴつ','Pencil'],['e','画画','え','Drawing'],['hasami','剪刀','はさみ','Scissors'],['tsukue','桌子','つくえ','Desk'],['isu','椅子','いす','Chair'],['randoseru','书包','ランドセル','Backpack'],['hirune','午睡','ひるね','Nap'],['kouen','操场','こうえん','Playground'],
+  ]),
+  nature: generatedTheme('nature', '大自然', '#b5d5c5', [
+    ['ki','树','き','Tree'],['hana2','花','はな','Flower'],['kusa','草','くさ','Grass'],['ha','叶子','は','Leaf'],['yama','山','やま','Mountain'],['kawa','河流','かわ','River'],['kumo','云','くも','Cloud'],['hoshi','星星','ほし','Star'],['tsuki2','月亮','つき','Moon'],['taiyo2','太阳','たいよう','Sun'],['ishi','石头','いし','Stone'],['mushi','小虫','むし','Bug'],
+  ]),
+  feelings: generatedTheme('feelings', '我的心情', '#e8b3b0', [
+    ['ureshii','我开心','うれしい','I am happy'],['kanashii','我难过','かなしい','I am sad'],['tsukareta','我累了','つかれた','I am tired'],['onakaSuita','我饿了','おなかすいた','I am hungry'],['nodoKawaita','我渴了','のどかわいた','I am thirsty'],['suki','我喜欢','すき','I like it'],['kirai','我不喜欢','きらい','I do not like it'],['kowai','我害怕','こわい','I am scared'],['daijobu','没关系','だいじょうぶ','No problem'],['asobo','一起玩吧','あそぼう','Let us play'],['bokuNoBan','轮到我了','ぼくのばん','My turn'],['kimiNoBan','轮到你了','きみのばん','Your turn'],
+  ]),
+  requests: generatedTheme('requests', '请求表达', '#e0c18e', [
+    ['kudasai','请给我','ください','Please give me'],['hoshii','我想要','ほしい','I want it'],['iranai','我不要','いらない','I do not want it'],['mouIchi','再来一次','もういちど','Again please'],['chottoMatte','等一下','ちょっとまって','Wait a moment'],['kocchi','看这里','こっちをみて','Look here'],['kiite','听我说','きいて','Listen to me'],['ikou','我们走吧','いこう','Let us go'],['issho','一起玩吧','いっしょにあそぼう','Let us play together'],['tetsudete','帮助我','てつだって','Help me'],['dekita','我完成了','できた','I did it'],['wakatta','我知道了','わかった','I understand'],
+  ]),
+  socialphrases: generatedTheme('socialphrases', '相处短句', '#c1c7df', [
+    ['watashiNo','这是我的','これは わたしの','This is mine'],['douzo','给你','どうぞ','Here you are'],['arigato2','谢谢你','ありがとう','Thank you'],['gomen2','对不起','ごめんね','Sorry'],['tasukete','请帮帮我','たすけて','Please help me'],['iiDesuKa','我可以吗','いいですか','May I?'],['genki','你好吗','げんき？','How are you?'],['genkiDesu','我很好','げんきです','I am fine'],['okaeri2','欢迎回家','おかえり','Welcome home'],['ohayo2','早安','おはよう','Good morning'],['oyasumi2','晚安','おやすみ','Good night'],['mataNe2','再见','またね','See you'],
+  ]),
+  animals2: generatedTheme('animals2', '更多动物', '#9fc8b5', [
+    ['choucho','蝴蝶','ちょうちょ','Butterfly'],['sakana','鱼','さかな','Fish'],['mushi2','虫子','むし','Bug'],['kaeru','青蛙','かえる','Frog'],['niwatori','鸡','にわとり','Chicken'],['hakucho','天鹅','はくちょう','Swan'],['hitsuji','羊','ひつじ','Sheep'],['kirin','长颈鹿','きりん','Giraffe'],['saru','猴子','さる','Monkey'],['kame','乌龟','かめ','Turtle'],['uma','马','うま','Horse'],['kirameki','瓢虫','てんとうむし','Ladybug'],
+  ]),
+  sizespeed: generatedTheme('sizespeed', '大小速度', '#c6b5d8', [
+    ['ookii2','大','おおきい','Big'],['chiisai2','小','ちいさい','Small'],['takai','高','たかい','Tall'],['hikui','矮','ひくい','Short'],['futoi','胖','ふとい','Fat'],['hosoi','瘦','ほそい','Thin'],['hayai','快','はやい','Fast'],['osoi','慢','おそい','Slow'],['ooku','多','おおい','Many'],['sukunai','少','すくない','Few'],['kirei','美','きれい','Beautiful'],['minikui','丑','みにくい','Ugly'],
+  ]),
+  family: generatedTheme('family', '家人称呼', '#efc0a8', [
+    ['otousan','爸爸','おとうさん','Dad'],['okaasan','妈妈','おかあさん','Mom'],['ojiichan','爷爷','おじいちゃん','Grandpa'],['obaachan','奶奶','おばあちゃん','Grandma'],['oniichan','哥哥','おにいちゃん','Older brother'],['oneechan','姐姐','おねえちゃん','Older sister'],['otouto','弟弟','おとうと','Younger brother'],['imouto','妹妹','いもうと','Younger sister'],['sensei2','老师','せんせい','Teacher'],['obasan','阿姨','おばさん','Auntie'],['ojisan','叔叔','おじさん','Uncle'],['tomodachi2','朋友','ともだち','Friend'],
+  ]),
+  jobs: generatedTheme('jobs', '常见职业', '#b5cce0', [
+    ['sensei3','老师','せんせい','Teacher'],['keisatsukan','警察','けいさつかん','Police officer'],['shoboshi','消防员','しょうぼうし','Firefighter'],['isha','医生','いしゃ','Doctor'],['kangoshi','护士','かんごし','Nurse'],['supotsu','运动员','スポーツせんしゅ','Athlete'],['bengoshi','律师','べんごし','Lawyer'],['ryorinin','厨师','りょうりにん','Chef'],['nouka','农民','のうか','Farmer'],['pairotto','飞行员','パイロット','Pilot'],['yubin','邮递员','ゆうびんやさん','Mail carrier'],['untenshu','司机','うんてんしゅ','Driver'],
+  ]),
 });
+
+const clearIcon = (emoji, color = '#fff8ed') => svg(`<text x="80" y="108" text-anchor="middle" font-size="78">${emoji}</text>`, color);
+const replacements = {
+  'body:0': '🧑‍🦱', 'food:0': '🍚', 'home:0': '🧊', 'routines:0': '🪥', 'weather:0': '🌧️', 'greetings:0': '👋', 'clothes:0': '👕', 'toys:0': '⚽',
+};
+for (const [key, emoji] of Object.entries(replacements)) { const [theme, index] = key.split(':'); if (builtInThemes[theme]?.images[index]) builtInThemes[theme].images[index].src = clearIcon(emoji); }
+builtInThemes.body.images[0].src = clearIcon('🧠');
+builtInThemes.home.images[0].src = svg('<rect x="42" y="28" width="76" height="108" rx="8" fill="#b9e1ef" stroke="#527d90" stroke-width="5"/><line x1="80" y1="30" x2="80" y2="134" stroke="#527d90" stroke-width="4"/><circle cx="67" cy="76" r="3" fill="#527d90"/><circle cx="93" cy="76" r="3" fill="#527d90"/>', '#f7fbff');
+const animalIcons = ['🦋','🐟','🐛','🐸','🐔','🦢','🐑','🦒','🐒','🐢','🐎','🐞'];
+builtInThemes.animals2.images.forEach((image, index) => { image.src = clearIcon(animalIcons[index]); });
+builtInThemes.colors.images = builtInThemes.colors.images.slice(0, 10);
+const phraseThemeIds = new Set(['routines', 'greetings', 'feelings', 'requests', 'socialphrases']);
+for (const [id, theme] of Object.entries(builtInThemes)) theme.group = phraseThemeIds.has(id) ? '短语' : '单词';
+import { preschoolThemes } from './preschool.js';
+Object.assign(builtInThemes, preschoolThemes);
 
 const english = { neko: 'Cat', inu: 'Dog', usagi: 'Rabbit', zou: 'Elephant', panda: 'Panda', pengin: 'Penguin', kuruma: 'Car', basu: 'Bus', densha: 'Train', hikouki: 'Airplane', fune: 'Ship', shoberukaa: 'Excavator', ringo: 'Apple', banana: 'Banana', ichigo: 'Strawberry', budou: 'Grapes', suika: 'Watermelon', orenji: 'Orange' };
 for (const theme of Object.values(builtInThemes)) {
