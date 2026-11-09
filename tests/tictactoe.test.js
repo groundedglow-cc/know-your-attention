@@ -5,6 +5,7 @@ import { CAT, DOG, createGame, winLines } from '../public/game/tictactoe/engine.
 const g3 = createGame(3, 3);
 const g4 = createGame(4, 4);
 const g43 = createGame(4, 3);
+const g54 = createGame(5, 4);
 
 function boardOf(game, filled = {}) {
   const b = Array(game.cells).fill(null);
@@ -87,6 +88,14 @@ test('minimax is deterministic and legal', () => {
   const m2 = g4.computerMove(b, DOG, 'minimax');
   assert.equal(m1, m2);
   assert.ok(g4.isLegal(b, m1));
+});
+
+test('minimax works on 5×5 four-in-a-row (the hard preset)', () => {
+  assert.equal(g54.computerMove(boardOf(g54, { 0: DOG, 1: DOG, 2: DOG }), DOG, 'minimax'), 3);
+  assert.equal(g54.computerMove(boardOf(g54, { 0: CAT, 1: CAT, 2: CAT }), DOG, 'minimax'), 3);
+  const empty = boardOf(g54);
+  const m = g54.computerMove(empty, DOG, 'minimax');
+  assert.ok(g54.isLegal(empty, m));
 });
 
 test('hint prefers winning move, then block, then center/corner', () => {

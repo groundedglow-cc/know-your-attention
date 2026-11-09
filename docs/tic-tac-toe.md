@@ -73,9 +73,9 @@
 
 - **简单**：3×3 · 三连，电脑随机落子。经典入门。
 - **中等**：4×4 · 四连，电脑 1 步攻防（能赢就赢 → 否则挡一步 → 否则随机）。
-- **复杂**：4×4 · 四连，电脑用深度 minimax（alpha-beta 剪枝，约 4 层），能识破「双威胁/叉」。
+- **复杂**：5×5 · 四连，电脑用深度 minimax（alpha-beta 剪枝，约 4 层），能识破「双威胁/叉」。
 
-设计依据：`几连 = 棋盘边长` 才是平衡游戏（3×3 三连、4×4 四连在双方最优下都是平局）；一旦「几连 < 边长」（如 4×4 三连）就是先手必胜，后手防不住。电脑策略分 `random` / `oneply` / `minimax` 三档，全部由 `engine.js` 的 `createGame(size, winLength)` 提供：`winLines` 按尺寸生成线段，`winner`/`status`/`computerMove`/`hint` 基于这些线段，minimax 用 `heuristic` 静态评估 + `orderedMoves` 走法排序加速。
+设计依据：4×4 四连在双方最优下是**平局**（AI 越聪明越容易下成和棋）；5×5 四连更开放、先手有更多空间制造威胁，因此「复杂」用 5×5 四连，孩子先手更有可能赢，避免陷入平局。电脑策略分 `random` / `oneply` / `minimax` 三档，全部由 `engine.js` 的 `createGame(size, winLength)` 提供：`winLines` 按尺寸生成线段，`winner`/`status`/`computerMove`/`hint` 基于这些线段，minimax 用 `heuristic` 静态评估 + `orderedMoves` 走法排序加速。
 
 电脑落子前等待约 600～900ms，让孩子看清轮流过程。
 

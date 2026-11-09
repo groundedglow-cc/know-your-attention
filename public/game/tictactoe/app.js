@@ -23,7 +23,7 @@ const sounds = createSounds({
 const DIFFICULTIES = {
   easy: { size: 3, winLength: 3, ai: 'random', hint: '3×3 · 三连' },
   medium: { size: 4, winLength: 4, ai: 'oneply', hint: '4×4 · 四连' },
-  hard: { size: 4, winLength: 4, ai: 'minimax', hint: '4×4 · 四连 · 更聪明' },
+  hard: { size: 5, winLength: 4, ai: 'minimax', hint: '5×5 · 四连 · 更聪明' },
 };
 
 function loadDifficulty() {
