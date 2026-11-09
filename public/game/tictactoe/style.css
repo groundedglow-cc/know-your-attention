@@ -93,7 +93,7 @@ button:focus-visible, .cell:focus-visible {
 #turn-text { font-size: 1.25rem; font-weight: 700; }
 
 /* 棋盘 */
-.board-wrap { position: relative; width: 100%; max-width: 460px; margin: 0 auto; }
+.board-wrap { position: relative; width: 100%; max-width: calc(100vh - 220px); max-width: calc(100dvh - 220px); margin: 0 auto; }
 .board {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 100%;
   -webkit-user-select: none; user-select: none;
@@ -134,6 +134,7 @@ button:focus-visible, .cell:focus-visible {
 .result-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 .result-actions .primary, .result-actions .secondary { min-width: 140px; }
 
+.board-actions { align-self: center; display: flex; gap: 12px; justify-content: center; }
 .hint {
   align-self: center; background: #fff; border-radius: 16px;
   box-shadow: 0 4px 0 var(--soft-edge-shadow); min-height: 52px;

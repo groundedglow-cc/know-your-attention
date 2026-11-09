@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#faf7ef">
   <title>动物三连棋 · 小小游戏室</title>
-  <link rel="stylesheet" href="/game/tictactoe/style.css?v=3">
+  <link rel="stylesheet" href="/game/tictactoe/style.css?v=5">
 </head>
 <body>
   <!-- 首页 -->
@@ -55,7 +55,10 @@
       </div>
     </div>
 
-    <button id="hint" class="hint">提示</button>
+    <div class="board-actions">
+      <button id="undo" class="hint">↶ 撤销</button>
+      <button id="hint" class="hint">提示</button>
+    </div>
   </section>
 
   <!-- 家长设置 -->
@@ -94,6 +97,6 @@
     </div>
   </dialog>
 
-  <script type="module" src="/game/tictactoe/app.js?v=4"></script>
+  <script type="module" src="/game/tictactoe/app.js?v=5"></script>
 </body>
 </html>

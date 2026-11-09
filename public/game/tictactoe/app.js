@@ -1,6 +1,6 @@
-import { CAT, DOG, createGame } from './engine.js?v=3';
-import { createSounds } from './sound.js?v=3';
-import { catPiece, robotPiece } from './art.js?v=3';
+import { CAT, DOG, createGame } from './engine.js?v=5';
+import { createSounds } from './sound.js?v=5';
+import { catPiece, robotPiece } from './art.js?v=5';
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -48,6 +48,7 @@ let finishingTutorial = false;
 let pressIndex = -1;
 let pressCancelled = false;
 let hintHaloEl = null;
+let history = [];
 
 const timers = new Set();
 function schedule(fn, ms) {
@@ -102,6 +103,18 @@ function renderPiece(i, occupant) {
   el.setAttribute('aria-label', cellLabel(i, occupant));
 }
 
+function renderFullBoard() {
+  renderBoard();
+  for (let i = 0; i < game.cells; i++) {
+    if (board[i]) renderPiece(i, board[i]);
+  }
+}
+
+function syncUndoButton() {
+  const canUndo = gameState.state === 'playing' && history.length > 0;
+  $('#undo').disabled = !canUndo;
+}
+
 function renderTurn() {
   const avatar = $('#turn-avatar');
   const text = $('#turn-text');
@@ -109,6 +122,7 @@ function renderTurn() {
   if (gameState.state !== 'playing' || !currentPlayer) {
     turn.hidden = true;
     $('#hint').disabled = true;
+    syncUndoButton();
     return;
   }
   turn.hidden = false;
@@ -123,6 +137,7 @@ function renderTurn() {
     text.textContent = currentPlayer === CAT ? '轮到小猫啦' : '轮到机器人啦';
   }
   $('#hint').disabled = isComputerTurn;
+  syncUndoButton();
 }
 
 // ---- 输入 ----
@@ -187,6 +202,7 @@ function onKeyDown(e, i) {
 // ---- 落子与回合 ----
 function commit(i, player) {
   board[i] = player;
+  history.push({ index: i, player });
   renderPiece(i, player);
   const el = cellEl(i);
   void el.offsetWidth;
@@ -323,7 +339,7 @@ function confetti() {
 function showResult(s) {
   $('#result-text').textContent = resultText(s);
   $('#result').hidden = false;
-  $('#hint').hidden = true;
+  $('.board-actions').hidden = true;
 }
 
 function clearOverlays() {
@@ -349,12 +365,45 @@ function showHint() {
   }, 1600);
 }
 
+// ---- 撤销 ----
+function undoMove() {
+  if (gameState.state !== 'playing' || history.length === 0) return;
+  clearTimers(); // cancel any pending computer move
+  locked = false;
+
+  if (mode === 'computer') {
+    // 回退到孩子上一步之前：先撤掉机器人（若有）的回应，再撤掉孩子那一子。
+    if (history[history.length - 1].player === DOG) {
+      const m = history.pop();
+      board[m.index] = null;
+    }
+    if (history.length && history[history.length - 1].player === CAT) {
+      const m = history.pop();
+      board[m.index] = null;
+    }
+    currentPlayer = CAT;
+  } else {
+    const m = history.pop();
+    board[m.index] = null;
+    currentPlayer = m.player;
+  }
+
+  gameState = { state: 'playing' };
+  clearOverlays();
+  renderFullBoard();
+  renderTurn();
+  $('#result').hidden = true;
+  $('.board-actions').hidden = false;
+  syncUndoButton();
+}
+
 // ---- 流程 ----
 function startGame(m) {
   mode = m;
   const preset = DIFFICULTIES[difficulty];
   game = createGame(preset.size, preset.winLength);
   board = Array(game.cells).fill(null);
+  history = [];
   if (mode === 'computer') {
     currentPlayer = CAT;
   } else {
@@ -368,7 +417,7 @@ function startGame(m) {
   renderBoard();
   renderTurn();
   $('#result').hidden = true;
-  $('#hint').hidden = false;
+  $('.board-actions').hidden = false;
   showScreen('game');
   sounds.unlock();
 }
@@ -515,6 +564,7 @@ $('#leave-go').addEventListener('click', () => { $('#leave-confirm').close(); go
 $('#play-again').addEventListener('click', () => startGame(mode));
 $('#go-home').addEventListener('click', () => goHome());
 $('#hint').addEventListener('click', showHint);
+$('#undo').addEventListener('click', undoMove);
 
 const soundBtn = $('#sound-toggle');
 function syncSoundBtn() {
