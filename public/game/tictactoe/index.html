@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#faf7ef">
   <title>动物三连棋 · 小小游戏室</title>
-  <link rel="stylesheet" href="/game/tictactoe/style.css?v=2">
+  <link rel="stylesheet" href="/game/tictactoe/style.css?v=3">
 </head>
 <body>
   <!-- 首页 -->
@@ -15,14 +15,14 @@
     </header>
     <div class="home-main">
       <h1>动物三连棋</h1>
-      <p class="tagline">小猫和小狗，看看谁能连成三个</p>
+      <p class="tagline">小猫和机器人，看看谁能连成一条线</p>
       <div class="hero" aria-hidden="true">
         <div class="hero-piece" id="hero-cat"></div>
         <div class="hero-vs">VS</div>
-        <div class="hero-piece" id="hero-dog"></div>
+        <div class="hero-piece" id="hero-robot"></div>
       </div>
       <div class="home-actions">
-        <button id="play-computer" class="primary big">和小狗玩</button>
+        <button id="play-computer" class="primary big">和机器人玩</button>
         <button id="play-family" class="secondary big">和家人玩</button>
       </div>
       <button id="open-settings" class="link">家长设置</button>
@@ -62,21 +62,10 @@
   <dialog id="settings" class="dialog">
     <h2>家长设置</h2>
     <fieldset>
-      <legend>棋盘大小</legend>
-      <label><input type="radio" name="board-size" value="3" checked> 3 × 3</label>
-      <label><input type="radio" name="board-size" value="4"> 4 × 4</label>
-      <label><input type="radio" name="board-size" value="5"> 5 × 5</label>
-    </fieldset>
-    <fieldset>
-      <legend>几连算赢</legend>
-      <label><input type="radio" name="win-length" value="3" checked> 三个连一线</label>
-      <label><input type="radio" name="win-length" value="4"> 四个连一线</label>
-      <label><input type="radio" name="win-length" value="5"> 五个连一线</label>
-    </fieldset>
-    <fieldset>
-      <legend>小狗的难度</legend>
-      <label><input type="radio" name="difficulty" value="easy" checked> 轻松（随便走走）</label>
-      <label><input type="radio" name="difficulty" value="challenge"> 挑战（会挡你啦）</label>
+      <legend>难度</legend>
+      <label><input type="radio" name="difficulty" value="easy" checked> 简单（3×3 · 三连）</label>
+      <label><input type="radio" name="difficulty" value="medium"> 中等（4×4 · 四连）</label>
+      <label><input type="radio" name="difficulty" value="hard"> 复杂（4×4 · 四连 · 更聪明）</label>
     </fieldset>
     <button id="replay-tutorial" class="secondary">重看教学</button>
     <button id="close-settings" class="primary">完成</button>
@@ -105,6 +94,6 @@
     </div>
   </dialog>
 
-  <script type="module" src="/game/tictactoe/app.js?v=2"></script>
+  <script type="module" src="/game/tictactoe/app.js?v=3"></script>
 </body>
 </html>

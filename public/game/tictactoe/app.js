@@ -1,6 +1,6 @@
-import { CAT, DOG, createGame } from './engine.js?v=2';
-import { createSounds } from './sound.js?v=2';
-import { catPiece, dogPiece } from './art.js?v=2';
+import { CAT, DOG, createGame } from './engine.js?v=3';
+import { createSounds } from './sound.js?v=3';
+import { catPiece, robotPiece } from './art.js?v=3';
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -18,18 +18,27 @@ const sounds = createSounds({
   storage,
 });
 
-function clampSize(s) { return s >= 3 && s <= 5 ? s : 3; }
-function clampWin(w, size) { return w >= 3 && w <= size ? w : size; }
+// Difficulty presets bundle board size + win length + computer strategy, so
+// degenerate combos (like 3-in-a-row on a 4×4 board) are never exposed.
+const DIFFICULTIES = {
+  easy: { size: 3, winLength: 3, ai: 'random', hint: '3×3 · 三连' },
+  medium: { size: 4, winLength: 4, ai: 'oneply', hint: '4×4 · 四连' },
+  hard: { size: 4, winLength: 4, ai: 'minimax', hint: '4×4 · 四连 · 更聪明' },
+};
+
+function loadDifficulty() {
+  let d = storage.getItem('tictactoe-difficulty');
+  if (d === 'challenge') d = 'medium'; // migrate the old value
+  return DIFFICULTIES[d] ? d : 'easy';
+}
 
 // ---- 状态 ----
 let mode = 'computer'; // 'computer' | 'family'
-let difficulty = storage.getItem('tictactoe-difficulty') === 'challenge' ? 'challenge' : 'easy';
-let boardSize = clampSize(parseInt(storage.getItem('tictactoe-size'), 10) || 3);
-let winLength = clampWin(parseInt(storage.getItem('tictactoe-win-length'), 10) || boardSize, boardSize);
+let difficulty = loadDifficulty();
 let tutorialDone = storage.getItem('tictactoe-tutorial-done') === '1';
 let familyStarter = CAT;
 
-let game = createGame(boardSize, winLength);
+let game = createGame(DIFFICULTIES[difficulty].size, DIFFICULTIES[difficulty].winLength);
 let board = Array(game.cells).fill(null);
 let currentPlayer = CAT;
 let gameState = { state: 'playing' };
@@ -56,7 +65,7 @@ function cellEl(i) { return $('#board').children[i]; }
 function cellLabel(i, occupant) {
   const row = Math.floor(i / game.size) + 1;
   const col = (i % game.size) + 1;
-  const who = occupant === CAT ? '小猫' : occupant === DOG ? '小狗' : '空格';
+  const who = occupant === CAT ? '小猫' : occupant === DOG ? '机器人' : '空格';
   return `第${row}行第${col}列，${who}`;
 }
 
@@ -88,7 +97,7 @@ function renderBoard() {
 
 function renderPiece(i, occupant) {
   const el = cellEl(i);
-  el.innerHTML = occupant === CAT ? catPiece() : dogPiece();
+  el.innerHTML = occupant === CAT ? catPiece() : robotPiece();
   el.classList.add('filled');
   el.setAttribute('aria-label', cellLabel(i, occupant));
 }
@@ -106,12 +115,12 @@ function renderTurn() {
   const isComputerTurn = mode === 'computer' && currentPlayer === DOG;
   if (isComputerTurn) {
     avatar.className = 'avatar thinking';
-    avatar.innerHTML = dogPiece();
-    text.textContent = '小狗在想……';
+    avatar.innerHTML = robotPiece();
+    text.textContent = '机器人在想……';
   } else {
     avatar.className = 'avatar';
-    avatar.innerHTML = currentPlayer === CAT ? catPiece() : dogPiece();
-    text.textContent = currentPlayer === CAT ? '轮到小猫啦' : '轮到小狗啦';
+    avatar.innerHTML = currentPlayer === CAT ? catPiece() : robotPiece();
+    text.textContent = currentPlayer === CAT ? '轮到小猫啦' : '轮到机器人啦';
   }
   $('#hint').disabled = isComputerTurn;
 }
@@ -209,19 +218,19 @@ function commit(i, player) {
 function scheduleComputerMove() {
   const delay = 600 + Math.random() * 300;
   schedule(() => {
-    const i = game.computerMove(board, DOG, difficulty);
+    const i = game.computerMove(board, DOG, DIFFICULTIES[difficulty].ai);
     if (i >= 0 && gameState.state === 'playing') commit(i, DOG);
   }, delay);
 }
 
 // ---- 结束 ----
 function resultText(s) {
-  const n = CN_NUM[winLength] || String(winLength);
+  const n = CN_NUM[game.winLength] || String(game.winLength);
   if (s.state === 'draw') return '棋盘满啦，这次平手！';
   if (mode === 'computer') {
-    return s.player === CAT ? `${n}个连起来啦！` : `小狗连成${n}个啦，再试一次吧！`;
+    return s.player === CAT ? `${n}个连起来啦！` : `机器人连成${n}个啦，再试一次吧！`;
   }
-  return s.player === CAT ? '小猫赢啦！' : '小狗赢啦！';
+  return s.player === CAT ? '小猫赢啦！' : '机器人赢啦！';
 }
 
 function playEndSound(s) {
@@ -343,7 +352,8 @@ function showHint() {
 // ---- 流程 ----
 function startGame(m) {
   mode = m;
-  game = createGame(boardSize, winLength);
+  const preset = DIFFICULTIES[difficulty];
+  game = createGame(preset.size, preset.winLength);
   board = Array(game.cells).fill(null);
   if (mode === 'computer') {
     currentPlayer = CAT;
@@ -381,7 +391,8 @@ function beginOrTutorial(m) {
 
 // ---- 教学 ----
 function showTutorial() {
-  game = createGame(boardSize, winLength);
+  const preset = DIFFICULTIES[difficulty];
+  game = createGame(preset.size, preset.winLength);
   const dialog = $('#tutorial');
   $('#tutorial-message').textContent = '点一下空格，连成一条线';
   $('#tutorial-start').hidden = true;
@@ -392,14 +403,13 @@ function showTutorial() {
 }
 
 function tutorialLayout() {
-  // winLength-1 cats in the top row, one empty target to complete the line.
   const placed = [];
   const line = [];
-  for (let c = 0; c < winLength; c++) {
+  for (let c = 0; c < game.winLength; c++) {
     line.push(c);
-    if (c < winLength - 1) placed.push(c);
+    if (c < game.winLength - 1) placed.push(c);
   }
-  return { placed, target: winLength - 1, line };
+  return { placed, target: game.winLength - 1, line };
 }
 
 function renderTutorialBoard() {
@@ -464,41 +474,24 @@ function finishTutorial() {
 }
 
 // ---- 设置 ----
-function syncWinLengthOptions() {
-  document.querySelectorAll('input[name="win-length"]').forEach((r) => {
-    r.disabled = Number(r.value) > boardSize;
-  });
-  if (winLength > boardSize) winLength = boardSize;
-  document.querySelectorAll('input[name="win-length"]').forEach((r) => {
-    r.checked = r.value === String(winLength);
-  });
-}
-
 function openSettings() {
   document.querySelectorAll('input[name="difficulty"]').forEach((r) => {
     r.checked = r.value === difficulty;
   });
-  document.querySelectorAll('input[name="board-size"]').forEach((r) => {
-    r.checked = r.value === String(boardSize);
-  });
-  syncWinLengthOptions();
   $('#settings').showModal();
-}
-
-function persistSettings() {
-  storage.setItem('tictactoe-size', String(boardSize));
-  storage.setItem('tictactoe-win-length', String(winLength));
-  storage.setItem('tictactoe-difficulty', difficulty);
 }
 
 // ---- 事件绑定 ----
 $('#hero-cat').innerHTML = catPiece();
-$('#hero-dog').innerHTML = dogPiece();
+$('#hero-robot').innerHTML = robotPiece();
 
 $('#play-computer').addEventListener('click', () => beginOrTutorial('computer'));
 $('#play-family').addEventListener('click', () => beginOrTutorial('family'));
 $('#open-settings').addEventListener('click', openSettings);
-$('#close-settings').addEventListener('click', () => { persistSettings(); $('#settings').close(); });
+$('#close-settings').addEventListener('click', () => {
+  storage.setItem('tictactoe-difficulty', difficulty);
+  $('#settings').close();
+});
 $('#replay-tutorial').addEventListener('click', () => {
   $('#settings').close();
   pendingStartMode = null;
@@ -507,19 +500,7 @@ $('#replay-tutorial').addEventListener('click', () => {
 
 document.querySelectorAll('input[name="difficulty"]').forEach((input) => {
   input.addEventListener('change', () => {
-    if (input.checked) difficulty = input.value === 'challenge' ? 'challenge' : 'easy';
-  });
-});
-document.querySelectorAll('input[name="board-size"]').forEach((input) => {
-  input.addEventListener('change', () => {
-    if (!input.checked) return;
-    boardSize = clampSize(Number(input.value));
-    syncWinLengthOptions();
-  });
-});
-document.querySelectorAll('input[name="win-length"]').forEach((input) => {
-  input.addEventListener('change', () => {
-    if (input.checked) winLength = clampWin(Number(input.value), boardSize);
+    if (input.checked) difficulty = input.value;
   });
 });
 

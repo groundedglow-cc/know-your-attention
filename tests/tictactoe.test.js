@@ -27,7 +27,7 @@ test('4×4 four-in-a-row: rows, columns, both diagonals', () => {
   assert.deepEqual(g4.winner(boardOf(g4, { 3: CAT, 6: CAT, 9: CAT, 12: CAT })), { player: CAT, line: [3, 6, 9, 12] });
 });
 
-test('4×4 three-in-a-row finds off-center segments', () => {
+test('shorter win length finds off-center segments', () => {
   assert.deepEqual(g43.winner(boardOf(g43, { 1: CAT, 2: CAT, 3: CAT })), { player: CAT, line: [1, 2, 3] });
   assert.deepEqual(g43.winner(boardOf(g43, { 5: CAT, 6: CAT, 7: CAT })), { player: CAT, line: [5, 6, 7] });
 });
@@ -56,21 +56,37 @@ test('illegal moves are rejected', () => {
   assert.equal(g3.isLegal(b, 1), true);
 });
 
-test('challenge AI wins immediately when it can, else blocks', () => {
-  assert.equal(g3.computerMove(boardOf(g3, { 0: DOG, 1: DOG, 3: CAT, 4: CAT }), DOG, 'challenge'), 2);
-  assert.equal(g3.computerMove(boardOf(g3, { 0: CAT, 1: CAT, 3: DOG }), DOG, 'challenge'), 2);
+test('oneply AI wins immediately when it can, else blocks', () => {
+  assert.equal(g3.computerMove(boardOf(g3, { 0: DOG, 1: DOG, 3: CAT, 4: CAT }), DOG, 'oneply'), 2);
+  assert.equal(g3.computerMove(boardOf(g3, { 0: CAT, 1: CAT, 3: DOG }), DOG, 'oneply'), 2);
 });
 
-test('challenge AI works on 4×4 four-in-a-row', () => {
-  assert.equal(g4.computerMove(boardOf(g4, { 0: DOG, 1: DOG, 2: DOG }), DOG, 'challenge'), 3);
-  assert.equal(g4.computerMove(boardOf(g4, { 0: CAT, 1: CAT, 2: CAT }), DOG, 'challenge'), 3);
-});
-
-test('easy AI always picks a legal empty cell', () => {
+test('random AI always picks a legal empty cell', () => {
   const b = boardOf(g4, { 0: CAT, 5: DOG });
   for (let k = 0; k < 50; k++) {
-    assert.ok(g4.isLegal(b, g4.computerMove(b, DOG, 'easy')));
+    assert.ok(g4.isLegal(b, g4.computerMove(b, DOG, 'random')));
   }
+});
+
+test('minimax wins immediately when it can', () => {
+  assert.equal(g4.computerMove(boardOf(g4, { 0: DOG, 1: DOG, 2: DOG }), DOG, 'minimax'), 3);
+});
+
+test('minimax blocks an immediate opponent win', () => {
+  assert.equal(g4.computerMove(boardOf(g4, { 0: CAT, 1: CAT, 2: CAT }), DOG, 'minimax'), 3);
+});
+
+test('minimax sees a fork that oneply misses', () => {
+  const b = boardOf(g4, { 1: DOG, 4: DOG, 6: DOG, 9: DOG });
+  assert.equal(g4.computerMove(b, DOG, 'minimax'), 5);
+});
+
+test('minimax is deterministic and legal', () => {
+  const b = boardOf(g4, { 0: CAT, 5: DOG, 10: CAT });
+  const m1 = g4.computerMove(b, DOG, 'minimax');
+  const m2 = g4.computerMove(b, DOG, 'minimax');
+  assert.equal(m1, m2);
+  assert.ok(g4.isLegal(b, m1));
 });
 
 test('hint prefers winning move, then block, then center/corner', () => {
