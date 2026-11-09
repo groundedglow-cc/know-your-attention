@@ -1,4 +1,4 @@
-import { builtInThemes } from './cards.js?v=3';
+import { builtInThemes } from './cards.js?v=4';
 import { DIFFICULTIES, createDeck, canFlip, compare } from './engine.js?v=3';
 import { createSounds } from './sound.js?v=3';
 const $ = s => document.querySelector(s);
